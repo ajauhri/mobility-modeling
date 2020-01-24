@@ -1,0 +1,14 @@
+*.pyc
+*~
+*.csv
+*.png
+*.sw*
+*.csv.gz
+*.png
+*.eps
+cab_input/
+hacks/
+city_boundaries/
+input/
+ny_src/
+random/
