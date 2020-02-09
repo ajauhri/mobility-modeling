@@ -7,6 +7,7 @@ from collections import Counter
 import pandas as pd
 import matplotlib.pylab as plt
 import os
+import logging
 
 """
 -- number of nodes active relative to the maximum number of nodes
@@ -27,7 +28,6 @@ def plot(city, info, n_nodes, n_edges, fit_func, p):
     plt.xlabel('Node count', fontsize=25)
     plt.ylabel('Edge count', fontsize=25)
     plt.tick_params(axis='both', labelsize=15)
-    #plt.tight_layout()
     plt.ylim([1, 10**4])
     plt.xlim([1, 10**4])
     plt.subplots_adjust(top=0.88)
@@ -39,17 +39,27 @@ def plot(city, info, n_nodes, n_edges, fit_func, p):
     plt.clf()
 
 def dpl(args, params):
-    out_file = os.path.join(
-        const.stats_dir, 'dpl_{}_{}s_{}m_{}m'.format
-        (
-            params.prefix,
-            args.time_bin_width,
-            args.min_node_len,
-            args.max_node_len
+    if args.save_results:
+        logging.info("Saving results")
+        out_file = os.path.join(
+            const.stats_dir, 'dpl_{}_{}s_{}m_{}m'.format
+            (
+                params.prefix,
+                args.time_bin_width,
+                args.min_node_len,
+                args.max_node_len
+            )
+        )
+        out_fd = open(out_file, 'w')
+        out_fd.write('node_len,c,alpha,r2,mean_nodes,tot_nodes,mean_edges\n')
+    logging.info("""Processing city {} with min_node_len={}m, """ 
+        """max_nodel_len={}m, time_bin_width={}secs""".format(
+            params.prefix, 
+            args.min_node_len, 
+            args.max_node_len, 
+            args.time_bin_width
         )
     )
-    out_fd = open(out_file, 'w')
-    out_fd.write('node_len,c,alpha,r2,mean_nodes,tot_nodes,mean_edges\n')
     df = pandas.read_csv(params.fname, sep=',')
     request_ts_vec = df.loc[:, ['request_timestamp']].values.astype(np.float64)
     P = df.loc[:, ['pickup_latitude', 'pickup_longitude']].values.astype(np.float64)
@@ -77,17 +87,21 @@ def dpl(args, params):
             rrg_t.compute_nodes_and_edges()
             n_nodes.append(rrg_t.n_nodes)
             n_edges.append(rrg_t.n_edges)
-            #print(node_len, t, n_nodes[-1], n_edges[-1], len(idxs))
+            logging.debug("""node len={}m, time_bin={}, num_nodes={}, """
+                """num_edges={}, #rides={}""".format(
+                    node_len, t, n_nodes[-1], n_edges[-1], len(idxs)
+                )
+            )
         p, infodict = helpers.compute_least_sq(n_nodes, n_edges)
         r2 = helpers.compute_r2(n_edges, infodict)
-        print("city prefix=%s, node_len=%dm, C=%.3f, alpha=%.3f, r2=%.3f, " \
+        logging.info("city prefix=%s, node_len=%dm, C=%.3f, alpha=%.3f, r2=%.3f, " \
             "mean nodes=%d, total nodes=%d, mean edges=%d" \
             % (params.prefix, node_len, p[0], p[1], r2, np.mean(n_nodes), 
                 tot_nodes,
                 np.mean(n_edges)))
-        out_fd.write('%d, %.3f, %.3f, %.3f, %d, %d, %d\n' % (node_len, 
-            p[0], p[1], r2, np.mean(n_nodes), tot_nodes, np.mean(n_edges)))
-        if args.save_plots:
+        if args.save_results:
+            out_fd.write('%d, %.3f, %.3f, %.3f, %d, %d, %d\n' % (node_len, 
+                p[0], p[1], r2, np.mean(n_nodes), tot_nodes, np.mean(n_edges)))
             plot(params.prefix, 'n{}_t{}'.format(node_len, args.time_bin_width), 
                 n_nodes, n_edges, helpers.fit_func, p)
     out_fd.close()
@@ -99,7 +113,7 @@ def main():
     `./main.py`
     """
     parser = argparse.ArgumentParser(description="DPL plots for cities")
-    parser.add_argument("-p", "--save_plots", help="generate and save plots",
+    parser.add_argument("-s", "--save_results", help="save plots and stats",
         action="store_true")
     parser.add_argument("-i", "--input", help="input file", 
         default="cities.csv")
@@ -120,7 +134,15 @@ def main():
         help="time bin width (seconds)", 
         type=int, 
         default=300)
+    parser.add_argument("-d", "--debug", help="debug logging level",
+        action="store_const", dest="loglevel", const=logging.DEBUG,
+        default=logging.INFO)
     args = parser.parse_args()
+
+    logging.basicConfig(
+        format='[%(asctime)s] [%(levelname)s] - %(message)s',
+        level=args.loglevel
+    )
 
 
     df = pd.read_csv(args.input, sep=',')
