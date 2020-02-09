@@ -22,6 +22,7 @@ import helpers
 const.plot_dir = './plots'
 const.stats_dir = './stats'
 
+
 def plot(city, info, n_nodes, n_edges, fit_func, p):
     plt.xscale('log')
     plt.yscale('log')
@@ -34,9 +35,11 @@ def plot(city, info, n_nodes, n_edges, fit_func, p):
     g = plt.plot(n_nodes, n_edges, 'kx', markersize=3)[0]
     plt.plot(n_nodes, fit_func(n_nodes, p), color='r')
     plt.title("C=%.3f, alpha=%.3f" % (p[0], p[1]), fontsize=25)
-    plt.savefig(os.path.join(const.plot_dir, "{0}_{1}.png".format(city, info)), 
+    plt.savefig(
+        os.path.join(const.plot_dir, "{0}_{1}.png".format(city, info)),
         format='png', dpi=500, bbox_inches='tight')
     plt.clf()
+
 
 def dpl(args, params):
     if args.save_results:
@@ -52,19 +55,24 @@ def dpl(args, params):
         )
         out_fd = open(out_file, 'w')
         out_fd.write('node_len,c,alpha,r2,mean_nodes,tot_nodes,mean_edges\n')
-    logging.info("""Processing city {} with min_node_len={}m, """ 
-        """max_nodel_len={}m, time_bin_width={}secs""".format(
+    logging.info(
+        """Processing city {} with min_node_len={}m, """
+        """max_nodel_len={}m, time_bin_width={}secs, max_time_bin={}""".format(
             params.prefix, 
             args.min_node_len, 
             args.max_node_len, 
-            args.time_bin_width
+            args.time_bin_width,
+            args.max_time_bin
         )
     )
     df = pandas.read_csv(params.fname, sep=',')
     request_ts_vec = df.loc[:, ['request_timestamp']].values.astype(np.float64)
-    P = df.loc[:, ['pickup_latitude', 'pickup_longitude']].values.astype(np.float64)
-    D = df.loc[:, ['dropoff_latitude', 'dropoff_longitude']].values.astype(np.float64)
-    time_bin_bounds = helpers.get_time_bin_bounds(request_ts_vec, 
+    P = df.loc[:, ['pickup_latitude', 'pickup_longitude']].values.astype(
+        np.float64)
+    D = df.loc[:, ['dropoff_latitude', 'dropoff_longitude']].values.astype(
+        np.float64)
+    time_bin_bounds = helpers.get_time_bin_bounds(
+        request_ts_vec,
         args.time_bin_width)
     data_time_buckets = helpers.bucket_by_time(time_bin_bounds, request_ts_vec)
     
@@ -73,37 +81,45 @@ def dpl(args, params):
         tot_nodes = []
         n_edges = []
         
-        lat_grids, lng_grids = helpers.grid_area(params.start_lat, 
+        lat_grids, lng_grids = helpers.grid_area(
+            params.start_lat,
             params.end_lat,
             params.start_lng, params.end_lng, 
             node_len)
         tot_nodes = len(lat_grids) * len(lng_grids)
 
         for t, idxs in data_time_buckets.items():
-            if len(idxs) == 0:
+            if len(idxs) <= 10:
                 continue
+            if t == args.max_time_bin:
+                break
             rrg_t = RRGSnapshot()
-            rrg_t.init(P[idxs,:], D[idxs,:], lat_grids, lng_grids)
+            rrg_t.init(P[idxs, :], D[idxs, :], lat_grids, lng_grids)
             rrg_t.compute_nodes_and_edges()
             n_nodes.append(rrg_t.n_nodes)
             n_edges.append(rrg_t.n_edges)
-            logging.debug("""node len={}m, time_bin={}, num_nodes={}, """
+            logging.debug(
+                """node len={}m, time_bin={}, num_nodes={}, """
                 """num_edges={}, #rides={}""".format(
                     node_len, t, n_nodes[-1], n_edges[-1], len(idxs)
                 )
             )
         p, infodict = helpers.compute_least_sq(n_nodes, n_edges)
         r2 = helpers.compute_r2(n_edges, infodict)
-        logging.info("city prefix=%s, node_len=%dm, C=%.3f, alpha=%.3f, r2=%.3f, " \
-            "mean nodes=%d, total nodes=%d, mean edges=%d" \
+        logging.info(
+            """city prefix=%s, node_len=%dm, C=%.3f, alpha=%.3f, r2=%.3f, """
+            """mean nodes=%d, total nodes=%d, mean edges=%d"""
             % (params.prefix, node_len, p[0], p[1], r2, np.mean(n_nodes), 
                 tot_nodes,
-                np.mean(n_edges)))
+                np.mean(n_edges))
+        )
         if args.save_results:
-            out_fd.write('%d, %.3f, %.3f, %.3f, %d, %d, %d\n' % (node_len, 
-                p[0], p[1], r2, np.mean(n_nodes), tot_nodes, np.mean(n_edges)))
-            plot(params.prefix, 'n{}_t{}'.format(node_len, args.time_bin_width), 
-                n_nodes, n_edges, helpers.fit_func, p)
+            out_fd.write("%d, %.3f, %.3f, %.3f, %d, %d, %d\n".format(
+                node_len, p[0], p[1], r2, np.mean(n_nodes), tot_nodes,
+                np.mean(n_edges)))
+            plot(params.prefix,
+                 "n{}_t{}".format(node_len, args.time_bin_width),
+                 n_nodes, n_edges, helpers.fit_func, p)
     out_fd.close()
 
 
@@ -114,27 +130,33 @@ def main():
     """
     parser = argparse.ArgumentParser(description="DPL plots for cities")
     parser.add_argument("-s", "--save_results", help="save plots and stats",
-        action="store_true")
+                        action="store_true")
     parser.add_argument("-i", "--input", help="input file", 
-        default="cities.csv")
+                        default="cities.csv")
     parser.add_argument("-n", 
-        "--cities", 
-        help="number of cities to read from the input file", 
-        type=int,
-        default=1)
+                        "--cities",
+                        help="number of cities to read from the input file",
+                        type=int,
+                        default=1)
     parser.add_argument("--min_node_len", 
-        help="miniumum length of node (meters)", 
-        type=int,
-        default=50)
+                        help="miniumum length of node (meters)",
+                        type=int,
+                        default=100)
     parser.add_argument("--max_node_len", 
-        help="maximum length of node (meters)", 
-        type=int,
-        default=5000)
+                        help="maximum length of node (meters)",
+                        type=int,
+                        default=500)
     parser.add_argument("--time_bin_width", 
-        help="time bin width (seconds)", 
-        type=int, 
-        default=300)
-    parser.add_argument("-d", "--debug", help="debug logging level",
+                        help="time bin width (seconds)",
+                        type=int,
+                        default=300)
+    parser.add_argument(
+        "--max_time_bin",
+        help="maximum number of time bins of width (--time_bin_width) to read",
+        type=int,
+        default=2016)
+    parser.add_argument(
+        "-d", "--debug", help="debug logging level",
         action="store_const", dest="loglevel", const=logging.DEBUG,
         default=logging.INFO)
     args = parser.parse_args()
@@ -143,7 +165,6 @@ def main():
         format='[%(asctime)s] [%(levelname)s] - %(message)s',
         level=args.loglevel
     )
-
 
     df = pd.read_csv(args.input, sep=',')
 
