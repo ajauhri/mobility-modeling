@@ -8,6 +8,7 @@ import pandas as pd
 import matplotlib.pylab as plt
 import os
 import logging
+from pathlib import Path
 
 """
 -- number of nodes active relative to the maximum number of nodes
@@ -35,8 +36,10 @@ def plot(city, info, n_nodes, n_edges, fit_func, p):
     g = plt.plot(n_nodes, n_edges, 'kx', markersize=3)[0]
     plt.plot(n_nodes, fit_func(n_nodes, p), color='r')
     plt.title("C=%.3f, alpha=%.3f" % (p[0], p[1]), fontsize=25)
+    dirname = os.path.join(const.plot_dir, city)
+    Path(dirname).mkdir(parents=True, exist_ok=True)
     plt.savefig(
-        os.path.join(const.plot_dir, "{0}_{1}.png".format(city, info)),
+        os.path.join(dirname, "{}.png".format(info)),
         format='png', dpi=500, bbox_inches='tight')
     plt.clf()
 
@@ -54,7 +57,8 @@ def dpl(args, params):
             )
         )
         out_fd = open(out_file, 'w')
-        out_fd.write('node_len,c,alpha,r2,mean_nodes,tot_nodes,mean_edges\n')
+        out_fd.write(
+            "node_len,c,alpha,r2,mean_nodes,mean_edges,tot_possible_nodes\n")
     logging.info(
         """Processing city {} with min_node_len={}m, """
         """max_nodel_len={}m, time_bin_width={}secs, max_time_bin={}""".format(
@@ -78,7 +82,6 @@ def dpl(args, params):
     
     for node_len in range(args.min_node_len, args.max_node_len+1, 50):
         n_nodes = []
-        tot_nodes = []
         n_edges = []
         
         lat_grids, lng_grids = helpers.grid_area(
@@ -108,15 +111,14 @@ def dpl(args, params):
         r2 = helpers.compute_r2(n_edges, infodict)
         logging.info(
             """city prefix=%s, node_len=%dm, C=%.3f, alpha=%.3f, r2=%.3f, """
-            """mean nodes=%d, total nodes=%d, mean edges=%d"""
+            """mean nodes=%d, mean edges=%d, total possible nodes=%d"""
             % (params.prefix, node_len, p[0], p[1], r2, np.mean(n_nodes), 
-                tot_nodes,
-                np.mean(n_edges))
-        )
+                np.mean(n_edges),
+                tot_nodes))
         if args.save_results:
             out_fd.write("%d, %.3f, %.3f, %.3f, %d, %d, %d\n".format(
-                node_len, p[0], p[1], r2, np.mean(n_nodes), tot_nodes,
-                np.mean(n_edges)))
+                node_len, p[0], p[1], r2, np.mean(n_nodes), np.mean(n_edges),
+                tot_nodes))
             plot(params.prefix,
                  "n{}_t{}".format(node_len, args.time_bin_width),
                  n_nodes, n_edges, helpers.fit_func, p)
