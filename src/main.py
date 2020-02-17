@@ -23,10 +23,13 @@ import helpers
 const.plot_dir = './plots'
 const.stats_dir = './stats'
 
-
-def plot(city, info, n_nodes, n_edges, fit_func, p):
+def enable_log_scale():
     plt.xscale('log')
     plt.yscale('log')
+
+
+def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
+    enable_log_scale()
     plt.xlabel('Node count', fontsize=25)
     plt.ylabel('Edge count', fontsize=25)
     plt.tick_params(axis='both', labelsize=15)
@@ -36,10 +39,30 @@ def plot(city, info, n_nodes, n_edges, fit_func, p):
     g = plt.plot(n_nodes, n_edges, 'kx', markersize=3)[0]
     plt.plot(n_nodes, fit_func(n_nodes, p), color='r')
     plt.title("C=%.3f, alpha=%.3f" % (p[0], p[1]), fontsize=25)
-    dirname = os.path.join(const.plot_dir, city)
+    dirname = os.path.join(const.plot_dir, city, "dpl")
     Path(dirname).mkdir(parents=True, exist_ok=True)
     plt.savefig(
-        os.path.join(dirname, "{}.png".format(info)),
+        os.path.join(dirname, "{}.png".format(fname)),
+        format='png', dpi=500, bbox_inches='tight')
+    plt.clf()
+
+
+def node_degree_plot(city, fname, degree, in_degree):
+    if in_degree:
+        label = 'in_degree'
+    else:
+        label = 'out_degree'
+    vals = [[k, v] for k, v in degree.items()]
+    vals = np.array(vals)
+    enable_log_scale()
+    plt.scatter(vals[:, 0], vals[:, 1], marker='x', s=20, c='k')
+    plt.xlabel('Node {}'.format(label), fontsize=25)
+    plt.ylabel('Number of nodes', fontsize=25)
+    plt.tick_params(axis='both', labelsize=15)
+    dirname = os.path.join(const.plot_dir, city, label)
+    Path(dirname).mkdir(parents=True, exist_ok=True)
+    plt.savefig(
+        os.path.join(dirname, "{}.png".format(fname)),
         format='png', dpi=500, bbox_inches='tight')
     plt.clf()
 
@@ -83,6 +106,8 @@ def dpl(args, params):
     for node_len in range(args.min_node_len, args.max_node_len+1, 50):
         n_nodes = []
         n_edges = []
+        in_degree = Counter()
+        out_degree = Counter()
         
         lat_grids, lng_grids = helpers.grid_area(
             params.start_lat,
@@ -99,8 +124,11 @@ def dpl(args, params):
             rrg_t = RRGSnapshot()
             rrg_t.init(P[idxs, :], D[idxs, :], lat_grids, lng_grids)
             rrg_t.compute_nodes_and_edges()
+            rrg_t.compute_node_degree()
             n_nodes.append(rrg_t.n_nodes)
             n_edges.append(rrg_t.n_edges)
+            in_degree += rrg_t.in_degree
+            out_degree += rrg_t.out_degree
             logging.debug(
                 """node len={}m, time_bin={}, num_nodes={}, """
                 """num_edges={}, #rides={}""".format(
@@ -119,9 +147,11 @@ def dpl(args, params):
             out_fd.write("%d, %.3f, %.3f, %.3f, %d, %d, %d\n".format(
                 node_len, p[0], p[1], r2, np.mean(n_nodes), np.mean(n_edges),
                 tot_nodes))
-            plot(params.prefix,
-                 "n{}_t{}".format(node_len, args.time_bin_width),
-                 n_nodes, n_edges, helpers.fit_func, p)
+            fname = "n{}_t{}".format(node_len, args.time_bin_width)
+            dpl_plot(params.prefix,
+                     fname, n_nodes, n_edges, helpers.fit_func, p)
+            node_degree_plot(params.prefix, fname, in_degree, True)
+            node_degree_plot(params.prefix, fname, out_degree, False)
     out_fd.close()
 
 
@@ -143,7 +173,7 @@ def main():
     parser.add_argument("--min_node_len", 
                         help="miniumum length of node (meters)",
                         type=int,
-                        default=100)
+                        default=50)
     parser.add_argument("--max_node_len", 
                         help="maximum length of node (meters)",
                         type=int,
