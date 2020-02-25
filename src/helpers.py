@@ -8,6 +8,7 @@ matplotlib.use('agg', warn=False, force=True)
 import matplotlib.pylab as plt
 import matplotlib.cm as cm
 import os
+import sys
 
 latitude_meters = 111.2 * 1000
 longitude_meters = 111 * 1000
@@ -109,8 +110,50 @@ class Params(object):
         self.end_lng = r['end_lng']
         self.fname = r['file_name']
 
+
 def compute_r2(n_edges, infodict):
     ss_err = (infodict['fvec']**2).sum()
     ss_tot = np.sum(n_edges - np.mean(n_edges)**2)
     rsquared = 1 - (ss_err/ss_tot)
     return rsquared
+
+
+def compute_diameter(graph_weights):
+    """
+    Find the effective diamater of the graph defines as minimum moves needed
+    to move between any two connected edges
+
+    :param graph_weights: graph
+
+    """
+
+    least_max_diameter = 0
+    num_of_nodes = len(graph_weights)
+    for i in range(num_of_nodes):
+        visisted_set = dict()
+        distance = np.zeros(num_of_nodes)
+        distance[:] = sys.maxint
+        distance[i] = 0
+
+        while len(visisted_set) != num_of_nodes:
+            sorted_distance = np.sort(distance)
+            vertex_index = -1
+            for i in np.uniq(sorted_distance):
+                index = np.where(distance == i)[0]
+                if index not in visited_set:
+                    vertex_index = index
+                    break
+            
+            if vertex_index == -1:
+                break
+
+            visited_set[vertex_index] = ''
+            for k,v in graph_weights[vertex_index].iteritems():
+                if distance[vertex_index] + v < distance[k]:
+                    distance[k] = distance[vertex_index] + v
+
+        for d in distance:
+            if d != sys.maxint and least_max_distane < d:
+                least_max_distance = d
+
+    return least_max_diameter

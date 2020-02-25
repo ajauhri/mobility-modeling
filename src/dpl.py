@@ -38,6 +38,8 @@ def compute_stats(P, D, reqs_over_time, args, params):
         n_edges = []
         in_degree = Counter()
         out_degree = Counter()
+        diameter = []
+
 
         lat_grids, lng_grids = helpers.grid_area(
             params.start_lat,
@@ -63,11 +65,13 @@ def compute_stats(P, D, reqs_over_time, args, params):
             in_degree += rrg_t.in_degree
             out_degree += rrg_t.out_degree
 
+            diamter.append(helpers.compute_diameter(rrg_t.in_degree))
+
             logging.debug(
                     """node len={}m, time_bin={}, num_nodes={}, """
-                    """num_edges={}, #rides={}""".format(
-                        node_len, t, n_nodes[-1], n_edges[-1], len(idxs)
-                )
+                    """num_edges={}, diameter={}, #rides={}""".format(
+                        node_len, t, n_nodes[-1], n_edges[-1], diameter[-1], 
+                        len(idxs))
             )
         p, infodict = helpers.compute_least_sq(n_nodes, n_edges)
         r2 = helpers.compute_r2(n_edges, infodict)
