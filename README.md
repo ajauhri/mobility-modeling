@@ -28,6 +28,12 @@ sf,32.8400,34.624491,-118.87654,-117.34905,san_francisco.csv
  * dropoff_latitude
  * dropoff_longitude
 
+Fractal analysis for ride requests as described here [2] can be done using:
+```
+$ ./src/main.py --input <path_to_configuration_file> -f -d 
+```
+We have provided our recommended node lengths for some cities `fractals.py`.
 
 
 [1]:https://arxiv.org/abs/1701.06635 
+[2]:https://arxiv.org/pdf/1712.01235.pdf

@@ -50,3 +50,22 @@ def node_degree_plot(city, fname, degree, in_degree):
         os.path.join(dirname, "{}.png".format(fname)),
         format='png', dpi=500, bbox_inches='tight')
     plt.clf()
+
+
+def fractal_plot(city, fname, epsilon, d, fit_func, params, **args):
+    enable_log_scale()
+    plt.xlabel(args['xlabel'], fontsize=25)
+    plt.ylabel(args['ylabel'], fontsize=25)
+    plt.tick_params(axis='both', labelsize=15)
+    plt.subplots_adjust(top=0.88)
+    plt.xlim(args['xlim'])
+    plt.ylim(args['ylim'])
+    plt.plot(epsilon, d, 'k.', markersize=6)
+    plt.plot(epsilon, fit_func(epsilon, params), color='r', linewidth=2)
+    plt.title("C=%.3f, alpha=%.3f" % (params[0], params[1]), fontsize=25)
+    dirname = os.path.join(const.plot_dir, city, "fd")
+    Path(dirname).mkdir(parents=True, exist_ok=True)
+    plt.savefig(
+        os.path.join(dirname, "{}.png".format(fname)), 
+        format='png', dpi=500, bbox_tight='tight')
+    plt.clf()

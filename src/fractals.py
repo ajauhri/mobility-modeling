@@ -60,11 +60,11 @@ def compute_stats(P, D, reqs_over_time, args, params):
             "time_idx,d0_constant,d0_alpha,d2_constant,d2_alpha,count\n") 
 
     for t, idxs in reqs_over_time.items():
-        if len(idxs) <= 10:
-            continue
-        
         if t == args.max_time_bin:
             break
+
+        if len(idxs) <= 10:
+            continue
 
         epsilon = []
         p = []
@@ -136,10 +136,9 @@ def compute_stats(P, D, reqs_over_time, args, params):
     d0 = -np.array(d0)
     d2 = np.array(d2)
 
-    l = """
-        city %s, D0 30Per %.3f, D2 30Per %.3f, D0 mean top 70Per %.3f, 
-        D2 mean top 70Per %.3f D0 max top 70Per %.3f, D2 max top 70Per %.3f 
-        """ % (
+    l = """city %s, D0 30Per %.3f, D2 30Per %.3f, D0 mean top 70Per %.3f, 
+           D2 mean top 70Per %.3f D0 max top 70Per %.3f,
+    	   D2 max top 70Per %.3f """ % (
         params.prefix, 
         np.percentile(d0, 30),
         np.percentile(d2, 30),
