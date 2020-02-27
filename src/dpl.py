@@ -8,6 +8,7 @@ import plot_helpers as ph
 import helpers
 import const
 
+
 def compute_stats(P, D, reqs_over_time, args, params):
     if args.save_results:
         logging.info("Saving results")
@@ -40,7 +41,6 @@ def compute_stats(P, D, reqs_over_time, args, params):
         out_degree = Counter()
         diameter = []
 
-
         lat_grids, lng_grids = helpers.grid_area(
             params.start_lat,
             params.end_lat,
@@ -65,7 +65,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
             in_degree += rrg_t.in_degree
             out_degree += rrg_t.out_degree
 
-            diamter.append(helpers.compute_diameter(rrg_t.in_degree))
+            diameter.append(helpers.compute_diameter(rrg_t.out_weights))
 
             logging.debug(
                     """node len={}m, time_bin={}, num_nodes={}, """
@@ -82,7 +82,6 @@ def compute_stats(P, D, reqs_over_time, args, params):
                 np.mean(n_edges),
                 tot_nodes))
     
-
         if args.save_results:
             out_fd.write("%d, %.3f, %.3f, %.3f, %d, %d, %d\n".format(
                 node_len, p[0], p[1], r2, np.mean(n_nodes), np.mean(n_edges),

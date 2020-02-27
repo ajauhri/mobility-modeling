@@ -126,34 +126,36 @@ def compute_diameter(graph_weights):
     :param graph_weights: graph
 
     """
-
     least_max_diameter = 0
-    num_of_nodes = len(graph_weights)
-    for i in range(num_of_nodes):
-        visisted_set = dict()
-        distance = np.zeros(num_of_nodes)
-        distance[:] = sys.maxint
-        distance[i] = 0
+    for node_id in graph_weights.keys():
+        visited_set = {}
+        distance = {}
+        for src in graph_weights.keys():
+            distance.update({k:sys.maxsize for k in graph_weights[src].keys()})
+            distance[src] = sys.maxsize
 
-        while len(visisted_set) != num_of_nodes:
-            sorted_distance = np.sort(distance)
-            vertex_index = -1
-            for i in np.uniq(sorted_distance):
-                index = np.where(distance == i)[0]
-                if index not in visited_set:
-                    vertex_index = index
-                    break
-            
-            if vertex_index == -1:
+        num_of_nodes = len(distance)
+        distance[node_id] = 0
+
+        while len(visited_set) != num_of_nodes:
+            vertex_node = -1
+            min_val = sys.maxsize
+            for k, v in distance.items():
+                if v < min_val and k not in visited_set:
+                    min_val = v
+                    vertex_node = k
+
+            if vertex_node == -1:
                 break
 
-            visited_set[vertex_index] = ''
-            for k,v in graph_weights[vertex_index].iteritems():
-                if distance[vertex_index] + v < distance[k]:
-                    distance[k] = distance[vertex_index] + v
+            visited_set[vertex_node] = '' 
+            if vertex_node in graph_weights:
+                for k, v in graph_weights[vertex_node].items():
+                    if distance[vertex_node] + 1 < distance[k]:
+                        distance[k] = distance[vertex_node] + 1
 
         for d in distance:
-            if d != sys.maxint and least_max_distane < d:
-                least_max_distance = d
+            if d < sys.maxsize and least_max_diameter < d:
+                least_max_diameter = d
 
     return least_max_diameter
