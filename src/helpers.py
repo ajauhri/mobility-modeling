@@ -154,8 +154,8 @@ def compute_diameter(graph_weights):
                     if distance[vertex_node] + 1 < distance[k]:
                         distance[k] = distance[vertex_node] + 1
 
-        for d in distance:
-            if d < sys.maxsize and least_max_diameter < d:
-                least_max_diameter = d
+        for k,v in distance.items():
+            if v < sys.maxsize and least_max_diameter < v:
+                least_max_diameter = v
 
     return least_max_diameter
