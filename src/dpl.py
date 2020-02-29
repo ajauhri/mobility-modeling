@@ -7,7 +7,7 @@ from rrg_snapshot import RRGSnapshot
 import plot_helpers as ph
 import helpers
 import const
-
+import time
 
 def compute_stats(P, D, reqs_over_time, args, params):
     if args.save_results:
@@ -65,7 +65,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
             in_degree += rrg_t.in_degree
             out_degree += rrg_t.out_degree
 
-            diameter.append(helpers.compute_diameter(rrg_t.out_weights))
+            diameter.append(helpers.compute_diameter_effective(rrg_t.out_weights))
 
             logging.debug(
                     """node len={}m, time_bin={}, num_nodes={}, """

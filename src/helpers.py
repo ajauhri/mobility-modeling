@@ -118,7 +118,7 @@ def compute_r2(n_edges, infodict):
     return rsquared
 
 
-def compute_diameter(graph_weights):
+def compute_diameter_effective(graph_weights):
     """
     Find the effective diamater of the graph defines as minimum moves needed
     to move between any two connected edges
@@ -130,11 +130,8 @@ def compute_diameter(graph_weights):
     for node_id in graph_weights.keys():
         visited_set = {}
         distance = {}
-        for src in graph_weights.keys():
-            distance.update({k:sys.maxsize for k in graph_weights[src].keys()})
-            distance[src] = sys.maxsize
 
-        num_of_nodes = len(distance)
+        num_of_nodes = len(graph_weights)
         distance[node_id] = 0
 
         while len(visited_set) != num_of_nodes:
@@ -148,14 +145,19 @@ def compute_diameter(graph_weights):
             if vertex_node == -1:
                 break
 
-            visited_set[vertex_node] = '' 
+            visited_set[vertex_node] = ''
+
             if vertex_node in graph_weights:
                 for k, v in graph_weights[vertex_node].items():
-                    if distance[vertex_node] + 1 < distance[k]:
-                        distance[k] = distance[vertex_node] + 1
+                    if k not in visited_set:
+                        if k in distance:
+                            if distance[vertex_node] + 1 < distance[k]:
+                                distance[k] = distance[vertex_node] + 1
+                        else:
+                            distance[k] = distance[vertex_node] + 1
 
-        for k,v in distance.items():
-            if v < sys.maxsize and least_max_diameter < v:
-                least_max_diameter = v
+                        if distance[k] > least_max_diameter:
+                            least_max_diameter = distance[k]
+            del distance[vertex_node]
 
     return least_max_diameter
