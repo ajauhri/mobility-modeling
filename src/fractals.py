@@ -1,4 +1,4 @@
-import sys 
+import sys
 import logging
 import pandas
 import math
@@ -20,6 +20,7 @@ fractal_limits = {
     "chicago": [600, 3000],
 }
 
+
 def compute_stats(P, D, reqs_over_time, args, params):
     logging.info("Performing fractal analysis for {}".format(params.prefix))
     if params.prefix in fractal_limits:
@@ -32,14 +33,14 @@ def compute_stats(P, D, reqs_over_time, args, params):
     logging.info(
         """Processing city {} with min_node_len={}m, """
         """max_nodel_len={}m, time_bin_width={}secs, max_time_bin={}""".format(
-            params.prefix, 
-            min_len, 
+            params.prefix,
+            min_len,
             max_len,
             args.time_bin_width,
             args.max_time_bin
         )
     )
-    
+
     time_idx = []
     d2 = []
     d0 = []
@@ -52,12 +53,12 @@ def compute_stats(P, D, reqs_over_time, args, params):
                 params.prefix,
                 args.time_bin_width,
                 min_len,
-                max_len 
+                max_len
             )
         )
         out_fd = open(out_file, 'w')
         out_fd.write(
-            "time_idx,d0_constant,d0_alpha,d2_constant,d2_alpha,count\n") 
+            "time_idx,d0_constant,d0_alpha,d2_constant,d2_alpha,count\n")
 
     for t, idxs in reqs_over_time.items():
         if t == args.max_time_bin:
@@ -71,7 +72,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
         box_count = []
         """
         Step value for node_len will alter the results for instance a step size
-        of 100 meters will give a different exponent for D2 in comparison to 
+        of 100 meters will give a different exponent for D2 in comparison to
         a step size of 50 meters.
         """
         for node_len in range(min_len, max_len+1, 50):
@@ -87,47 +88,47 @@ def compute_stats(P, D, reqs_over_time, args, params):
             epsilon.append(node_len)
             box_count.append(len(rrg_t.dest_nodes))
             p.append(np.sum(np.array(list(rrg_t.dest_nodes.values()))**2))
-        
+
         epsilon = np.array(epsilon)
         box_count = np.array(box_count)
         p = np.array(p)
 
         lims = np.where(
             np.logical_and(epsilon >= min_len, epsilon <= max_len))[0]
-        d0_params, res = helpers.compute_least_sq(epsilon[lims], 
+        d0_params, res = helpers.compute_least_sq(epsilon[lims],
             box_count[lims])
         d2_params, res = helpers.compute_least_sq(epsilon[lims], p[lims])
-        if args.save_results and t % 100 == 0: 
+        if args.save_results and t % 100 == 0:
             ph.fractal_plot(
-                params.prefix, 'd0_{}'.format(t), epsilon[lims], 
-                box_count[lims], 
-                helpers.fit_func, 
-                d0_params, 
-                xlabel=r'$\log \epsilon$', ylabel=r'$\log N(\epsilon)$', 
+                params.prefix, 'd0_{}'.format(t), epsilon[lims],
+                box_count[lims],
+                helpers.fit_func,
+                d0_params,
+                xlabel=r'$\log \epsilon$', ylabel=r'$\log N(\epsilon)$',
                 prefix='d0_' + str(t),
                 xlim=[10**2, 10**3.65],
                 ylim=[10**1, 10**3])
             ph.fractal_plot(
-                params.prefix, 'd2_{}'.format(t), epsilon[lims], 
-                p[lims], 
-                helpers.fit_func, 
-                d2_params, 
-                xlabel=r'$\log \epsilon$', ylabel=r'$\log S2$', 
+                params.prefix, 'd2_{}'.format(t), epsilon[lims],
+                p[lims],
+                helpers.fit_func,
+                d2_params,
+                xlabel=r'$\log \epsilon$', ylabel=r'$\log S2$',
                 xlim=[10**2, 10**3.65],
                 ylim=[10**2, 10**4])
         if args.save_results:
             out_fd.write("%d, %.3f, %.3f, %.3f, %.3f, %d\n" % (
-                t,  
-                d0_params[0], 
-                -d0_params[1], 
-                d2_params[0], 
+                t,
+                d0_params[0],
+                -d0_params[1],
+                d2_params[0],
                 d2_params[1],
                 len(idxs)))
-        
+
         logging.debug("city %s, time snapshot %d, D0 %.3f D2 %.3f count %d" % (
             params.prefix,
-            t, 
-            d0_params[1], 
+            t,
+            d0_params[1],
             d2_params[1],
             len(idxs)))
         time_idx.append(t)
@@ -136,10 +137,10 @@ def compute_stats(P, D, reqs_over_time, args, params):
     d0 = -np.array(d0)
     d2 = np.array(d2)
 
-    l = """city %s, D0 30Per %.3f, D2 30Per %.3f, D0 mean top 70Per %.3f, 
+    l = """city %s, D0 30Per %.3f, D2 30Per %.3f, D0 mean top 70Per %.3f,
            D2 mean top 70Per %.3f D0 max top 70Per %.3f,
     	   D2 max top 70Per %.3f """ % (
-        params.prefix, 
+        params.prefix,
         np.percentile(d0, 30),
         np.percentile(d2, 30),
         np.mean(d0[d0 > np.percentile(d0, 30)]),
@@ -154,7 +155,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
                 params.prefix,
                 args.time_bin_width,
                 min_len,
-                max_len 
+                max_len
             )
         ), 'w')
     summary_fd.write(l)

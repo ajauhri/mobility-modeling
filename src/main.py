@@ -8,7 +8,7 @@ import logging
 
 """
 -- number of nodes active relative to the maximum number of nodes
--- distances of tiles 
+-- distances of tiles
 -- clustering tiles
 """
 
@@ -32,11 +32,11 @@ def compute_stats(args, params):
         args.time_bin_width)
     reqs_over_time = helpers.bucket_by_time(time_bin_bounds, request_ts_vec)
     if args.fractal_analysis:
-        fractals.compute_stats(P, D, request_ts_vec, reqs_over_time, 
-            args, params)
+        fractals.compute_stats(P, D, request_ts_vec, reqs_over_time,
+                               args, params)
     else:
         dpl.compute_stats(P, D, request_ts_vec, reqs_over_time, args, params)
-    
+
 
 def main():
     """
@@ -44,30 +44,32 @@ def main():
     `./main.py`
     """
     parser = argparse.ArgumentParser(description="DPL plots for cities")
-    parser.add_argument("-s", "--save_results", help="save plots and stats",
+    parser.add_argument("-s", "--save_results",
+                        help="save plots and stats",
                         action="store_true")
-    parser.add_argument("-f", "--fractal_analysis", help="run fractal analysis",
+    parser.add_argument("-f", "--fractal_analysis",
+                        help="run fractal analysis",
                         action="store_true")
-    parser.add_argument("-i", "--input", help="input file", 
+    parser.add_argument("-i", "--input", help="input file",
                         default="cities.csv")
-    parser.add_argument("-n", 
+    parser.add_argument("-n",
                         "--cities",
                         help="number of cities to read from the input file",
                         type=int,
                         default=1)
-    parser.add_argument("--min_node_len", 
+    parser.add_argument("--min_node_len",
                         help="miniumum length of node (meters)",
                         type=int,
                         default=50)
-    parser.add_argument("--max_node_len", 
+    parser.add_argument("--max_node_len",
                         help="maximum length of node (meters)",
                         type=int,
                         default=500)
-    parser.add_argument("--time_bin_width", 
+    parser.add_argument("--time_bin_width",
                         help="time bin width (seconds)",
                         type=int,
                         default=300)
-    parser.add_argument("--skip_night_hours", 
+    parser.add_argument("--skip_night_hours",
                         help="Skip midnight to 6am for analysis",
                         action="store_true")
     parser.add_argument(
@@ -82,7 +84,8 @@ def main():
     args = parser.parse_args()
 
     logging.basicConfig(
-        format='[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s - %(message)s',
+        format="""[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s
+                - %(message)s""",
         level=args.loglevel
     )
 

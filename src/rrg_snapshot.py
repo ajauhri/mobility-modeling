@@ -15,7 +15,7 @@ class RRGSnapshot(object):
     """
     def __init__(self):
         self.out_weights = {}  # contains weights on directed edges
-        self.in_weights = {} 
+        self.in_weights = {}
         self.pairs = {}  # unique node pairs in the graph
         self.C = []  # centroids for each unique pair of nodes
         self.pair_dists = []
@@ -33,19 +33,19 @@ class RRGSnapshot(object):
 
     def init(self, S, D, lat_grids, lng_grids):
         """
-        Takes the start and destination location of ride requests to find 
+        Takes the start and destination location of ride requests to find
         the corresponding nodes of a graph
 
         :param S: 2-dimensional array with source lat and lngs
         :param D: 2-dimensional array with destination lat and lngs
-        :param lat_grids: division of min. and max. 
-        :param lng_grids: division of min. and max. 
+        :param lat_grids: division of min. and max.
+        :param lng_grids: division of min. and max.
         """
         if len(S) != len(D):
-            return 
+            return
         for i in range(len(S)):
             """
-            Since the grids are in ascending order, argmax will 
+            Since the grids are in ascending order, argmax will
             satisfy the following conditions:
                 1) S[i, 0] >= lat_grids[src_lat_cell - 1]
                                 and
@@ -59,19 +59,19 @@ class RRGSnapshot(object):
                     S[i, 0], lat_grids[0], lat_grids[-1]) \
                 else 1 if not helpers.gte_lb(S[i, 0], lat_grids[0]) \
                     else len(lat_grids) - 1
-     
+
             src_lng_cell = np.argmax(S[i, 1] < lng_grids) \
                 if self._within_boundary(
                     S[i, 1], lng_grids[0], lng_grids[-1]) \
                 else 1 if not helpers.gte_lb(S[i, 1], lng_grids[0]) \
                     else len(lng_grids) - 1
-             
+
             dest_lat_cell = np.argmax(D[i, 0] < lat_grids) \
-                if self._within_boundary( 
+                if self._within_boundary(
                     D[i, 0], lat_grids[0], lat_grids[-1])  \
                 else 1 if not helpers.gte_lb(D[i, 0], lat_grids[0]) \
                     else len(lat_grids) - 1
-            
+
             dest_lng_cell = np.argmax(D[i, 1] < lng_grids) \
                 if self._within_boundary(
                     D[i, 1], lng_grids[0], lng_grids[-1])  \
@@ -84,7 +84,7 @@ class RRGSnapshot(object):
                 (dest_lng_cell - 1)
             self.source_nodes[source_node] += 1
             self.dest_nodes[dest_node] += 1
-            
+
             if source_node not in self.out_weights:
                 self.out_weights[source_node] = Counter()
             self.out_weights[source_node][dest_node] += 1

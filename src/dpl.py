@@ -9,6 +9,7 @@ import helpers
 import const
 import time
 
+
 def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
     if args.save_results:
         logging.info("Saving results")
@@ -27,9 +28,9 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
     logging.info(
         """Processing city {} with min_node_len={}m, """
         """max_nodel_len={}m, time_bin_width={}secs, max_time_bin={}""".format(
-            params.prefix, 
-            args.min_node_len, 
-            args.max_node_len, 
+            params.prefix,
+            args.min_node_len,
+            args.max_node_len,
             args.time_bin_width,
             args.max_time_bin
         )
@@ -52,8 +53,8 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
 
         for t, idxs in reqs_over_time.items():
             if len(idxs) <= 10 or \
-                (args.skip_night_hours and 
-                    helpers.is_night_hour(request_ts_vec[idxs][0],
+                (args.skip_night_hours and
+                helpers.is_night_hour(request_ts_vec[idxs][0],
                     params.time_zone)):
                 continue
             if t == args.max_time_bin:
@@ -63,7 +64,7 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
             rrg_t.init(P[idxs, :], D[idxs, :], lat_grids, lng_grids)
             rrg_t.compute_nodes_and_edges()
             rrg_t.compute_node_degree()
-            
+
             n_nodes.append(rrg_t.n_nodes)
             n_edges.append(rrg_t.n_edges)
             n_rides.append(len(idxs))
@@ -77,7 +78,7 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
             logging.debug(
                     """node len={}m, time_bin={}, num_nodes={}, """
                     """num_edges={}, diameter={}, #rides={}""".format(
-                        node_len, t, n_nodes[-1], n_edges[-1], diameter[-1], 
+                        node_len, t, n_nodes[-1], n_edges[-1], diameter[-1],
                         len(idxs))
             )
         p, infodict = helpers.compute_least_sq(n_nodes, n_edges)
@@ -85,10 +86,10 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
         logging.info(
             """city prefix=%s, node_len=%dm, C=%.3f, alpha=%.3f, r2=%.3f, """
             """mean nodes=%d, mean edges=%d, total possible nodes=%d"""
-            % (params.prefix, node_len, p[0], p[1], r2, np.mean(n_nodes), 
+            % (params.prefix, node_len, p[0], p[1], r2, np.mean(n_nodes),
                 np.mean(n_edges),
                 tot_nodes))
-    
+
         if args.save_results:
             out_fd.write("%d, %.3f, %.3f, %.3f, %d, %d, %d\n".format(
                 node_len, p[0], p[1], r2, np.mean(n_nodes), np.mean(n_edges),

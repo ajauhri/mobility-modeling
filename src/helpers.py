@@ -1,31 +1,35 @@
 from __future__ import division
 
+from dateutil import tz
+import matplotlib.pylab as plt
+import matplotlib.cm as cm
+import matplotlib
 import numpy as np
 import logging
 import scipy.optimize as scimin
-import matplotlib
-matplotlib.use('agg', warn=False, force=True)
-import matplotlib.pylab as plt
-import matplotlib.cm as cm
 import os
 import sys
-
-from dateutil import tz
 import pytz
 import datetime
 
+matplotlib.use('agg', warn=False, force=True)
+
 latitude_meters = 111.2 * 1000
 longitude_meters = 111 * 1000
-earth_radius_km = 6371.009 
+earth_radius_km = 6371.009
+
 
 def gte_lb(x, lb):
     return x >= lb
-    
+
+
 def lte_ub(x, ub):
     return x <= ub
 
+
 def within_boundary(x, lb, ub):
     return gte_lb(x, lb) and lte_ub(x, ub)
+
 
 def get_time_bin_bounds(vec, time_bin_width_secs):
     """
@@ -33,8 +37,9 @@ def get_time_bin_bounds(vec, time_bin_width_secs):
     """
     # to ensure the last upper bound is greater than the actual max. time
     bias = time_bin_width_secs
-    return np.array(range(int(np.min(vec)), int(np.max(vec)) + bias, 
+    return np.array(range(int(np.min(vec)), int(np.max(vec)) + bias,
         time_bin_width_secs))
+
 
 def bucket_by_time(time_bin_bounds, vec):
     time_bins = {}
@@ -46,17 +51,17 @@ def bucket_by_time(time_bin_bounds, vec):
         len(time_bins)))
     return time_bins
 
-def grid_area(lat_min, lat_max, lng_min, lng_max, 
-        length_meters):
+
+def grid_area(lat_min, lat_max, lng_min, lng_max, length_meters):
     """
     Divides a spatial area into equally sized cells.
     """
-    
-    lat_steps = int(abs(lat_max - lat_min) 
+
+    lat_steps = int(abs(lat_max - lat_min)
         * latitude_meters / length_meters)
     lat_grids = np.linspace(lat_min, lat_max, lat_steps)
-    
-    lng_steps = int(abs(lng_max - lng_min) 
+
+    lng_steps = int(abs(lng_max - lng_min)
         * longitude_meters / length_meters)
     lng_grids = np.linspace(lng_min, lng_max, lng_steps)
 
@@ -66,25 +71,27 @@ def grid_area(lat_min, lat_max, lng_min, lng_max,
 def get_node(lat_grids, lng_grids, p):
     lat_cell = 0
     lng_cell = 0
-    
+
     if within_boundary(p[0], lat_grids[0], lat_grids[-1]):
         if within_boundary(p[1], lng_grids[0], lng_grids[-1]):
             lat_cell = np.argmax(p[0] < lat_grids)
             lng_cell = np.argmax(p[1] < lng_grids)
-    
+
     node = (lat_cell - 1) * len(lng_grids) + (lng_cell - 1)
     return node, lat_cell - 1, lng_cell - 1
 
+
 def compute_least_sq(x, y):
-    guess = [1,1]
+    guess = [1, 1]
     params, cov, infodict, mesg, iter = scimin.leastsq(
         resi, guess, args=(x, y),
         full_output=True)
     return params, infodict
 
+
 def fit_func(x, p):
     """
-    Linear fit function which empirically which relates number of edges 
+    Linear fit function which empirically which relates number of edges
     to number of nodes
 
     :param x: domain of the function
@@ -94,16 +101,18 @@ def fit_func(x, p):
     c, l = p
     return c*x**l
 
+
 def resi(p, x, y):
     """
     Finds the residual between the fitted function and the ground truth
 
     :param p: parameters for the fit function
     :param x
-    :param y 
+    :param y
     :return: residual vector of same dimenstion as n_nodes
     """
     return y - fit_func(x, p)
+
 
 class Params(object):
     def __init__(self, r):
@@ -177,4 +186,3 @@ def is_night_hour(epoch, time_zone):
         return True
     else:
         return False
-
