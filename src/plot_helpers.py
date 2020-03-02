@@ -12,7 +12,6 @@ def enable_log_scale():
     plt.xscale('log')
     plt.yscale('log')
 
-
 def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
     enable_log_scale()
     plt.xlabel('Node count', fontsize=25)
@@ -21,7 +20,7 @@ def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
     plt.ylim([1, 10**4])
     plt.xlim([1, 10**4])
     plt.subplots_adjust(top=0.88)
-    g = plt.plot(n_nodes, n_edges, 'kx', markersize=3)[0]
+    plt.plot(n_nodes, n_edges, 'kx', markersize=3)
     plt.plot(n_nodes, fit_func(n_nodes, p), color='r')
     plt.title("C=%.3f, alpha=%.3f" % (p[0], p[1]), fontsize=25)
     dirname = os.path.join(const.plot_dir, city, "dpl")
@@ -69,3 +68,17 @@ def fractal_plot(city, fname, epsilon, d, fit_func, params, **args):
         os.path.join(dirname, "{}.png".format(fname)), 
         format='png', dpi=500, bbox_tight='tight')
     plt.clf()
+
+
+def effective_diameter(city, fname, n_nodes, diameter):
+    plt.xlabel('Node count', fontsize=25)
+    plt.ylabel('Effective Diamter', fontsize=25)
+    plt.plot(n_nodes, diameter, 'kx', markersize=3)
+    dirname = os.path.join(const.plot_dir, city, "ed")
+    Path(dirname).mkdir(parents=True, exist_ok=True)
+    plt.savefig(
+        os.path.join(dirname, "{}.png".format(fname)),
+        format='png', dpi=500, bbox_inches='tight')
+    plt.clf()
+
+

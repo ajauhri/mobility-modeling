@@ -10,6 +10,10 @@ import matplotlib.cm as cm
 import os
 import sys
 
+from dateutil import tz
+import pytz
+import datetime
+
 latitude_meters = 111.2 * 1000
 longitude_meters = 111 * 1000
 earth_radius_km = 6371.009 
@@ -109,6 +113,7 @@ class Params(object):
         self.start_lng = r['start_lng']
         self.end_lng = r['end_lng']
         self.fname = r['file_name']
+        self.time_zone = r['time_zone']
 
 
 def compute_r2(n_edges, infodict):
@@ -161,3 +166,15 @@ def compute_diameter_effective(graph_weights):
             del distance[vertex_node]
 
     return least_max_diameter
+
+
+def is_night_hour(epoch, time_zone):
+    dt = datetime.datetime.utcfromtimestamp(epoch)
+    dt = pytz.utc.localize(dt)
+    to_zone = tz.gettz(time_zone)
+    hour = dt.astimezone(to_zone).hour
+    if hour >= 0 and hour <= 5:
+        return True
+    else:
+        return False
+

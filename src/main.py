@@ -22,7 +22,7 @@ const.stats_dir = './stats'
 
 def compute_stats(args, params):
     df = pd.read_csv(params.fname, sep=',')
-    request_ts_vec = df.loc[:, ['dropoff_timestamp']].values.astype(np.float64)
+    request_ts_vec = df.loc[:, ['request_timestamp']].values.astype(np.float64)
     P = df.loc[:, ['pickup_latitude', 'pickup_longitude']].values.astype(
         np.float64)
     D = df.loc[:, ['dropoff_latitude', 'dropoff_longitude']].values.astype(
@@ -32,9 +32,10 @@ def compute_stats(args, params):
         args.time_bin_width)
     reqs_over_time = helpers.bucket_by_time(time_bin_bounds, request_ts_vec)
     if args.fractal_analysis:
-        fractals.compute_stats(P, D, reqs_over_time, args, params)
+        fractals.compute_stats(P, D, request_ts_vec, reqs_over_time, 
+            args, params)
     else:
-        dpl.compute_stats(P, D, reqs_over_time, args, params)
+        dpl.compute_stats(P, D, request_ts_vec, reqs_over_time, args, params)
     
 
 def main():
@@ -66,6 +67,9 @@ def main():
                         help="time bin width (seconds)",
                         type=int,
                         default=300)
+    parser.add_argument("--skip_night_hours", 
+                        help="Skip midnight to 6am for analysis",
+                        action="store_true")
     parser.add_argument(
         "--max_time_bin",
         help="maximum number of time bins of width (--time_bin_width) to read",

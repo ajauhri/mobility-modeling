@@ -9,7 +9,7 @@ import helpers
 import const
 import time
 
-def compute_stats(P, D, reqs_over_time, args, params):
+def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
     if args.save_results:
         logging.info("Saving results")
         out_file = os.path.join(
@@ -40,6 +40,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
         in_degree = Counter()
         out_degree = Counter()
         diameter = []
+        n_rides = []
 
         lat_grids, lng_grids = helpers.grid_area(
             params.start_lat,
@@ -50,7 +51,10 @@ def compute_stats(P, D, reqs_over_time, args, params):
         tot_nodes = len(lat_grids) * len(lng_grids)
 
         for t, idxs in reqs_over_time.items():
-            if len(idxs) <= 10:
+            if len(idxs) <= 10 or \
+                (args.skip_night_hours and 
+                    helpers.is_night_hour(request_ts_vec[idxs][0],
+                    params.time_zone)):
                 continue
             if t == args.max_time_bin:
                 break
@@ -59,13 +63,16 @@ def compute_stats(P, D, reqs_over_time, args, params):
             rrg_t.init(P[idxs, :], D[idxs, :], lat_grids, lng_grids)
             rrg_t.compute_nodes_and_edges()
             rrg_t.compute_node_degree()
+            
             n_nodes.append(rrg_t.n_nodes)
             n_edges.append(rrg_t.n_edges)
+            n_rides.append(len(idxs))
 
             in_degree += rrg_t.in_degree
             out_degree += rrg_t.out_degree
 
-            diameter.append(helpers.compute_diameter_effective(rrg_t.out_weights))
+            diameter.append(
+                helpers.compute_diameter_effective(rrg_t.out_weights))
 
             logging.debug(
                     """node len={}m, time_bin={}, num_nodes={}, """
@@ -91,4 +98,5 @@ def compute_stats(P, D, reqs_over_time, args, params):
                         fname, n_nodes, n_edges, helpers.fit_func, p)
             ph.node_degree_plot(params.prefix, fname, in_degree, True)
             ph.node_degree_plot(params.prefix, fname, out_degree, False)
+            ph.effective_diameter(params.prefix, fname, n_nodes, diameter)
     out_fd.close()
