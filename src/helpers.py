@@ -37,8 +37,12 @@ def get_time_bin_bounds(vec, time_bin_width_secs):
     """
     # to ensure the last upper bound is greater than the actual max. time
     bias = time_bin_width_secs
-    return np.array(range(int(np.min(vec)), int(np.max(vec)) + bias,
-        time_bin_width_secs))
+    return np.array(
+        range(
+            int(np.min(vec)),
+            int(np.max(vec)) + bias,
+            time_bin_width_secs
+        ))
 
 
 def bucket_by_time(time_bin_bounds, vec):
@@ -57,12 +61,12 @@ def grid_area(lat_min, lat_max, lng_min, lng_max, length_meters):
     Divides a spatial area into equally sized cells.
     """
 
-    lat_steps = int(abs(lat_max - lat_min)
-        * latitude_meters / length_meters)
+    lat_steps = int(
+        abs(lat_max - lat_min) * latitude_meters / length_meters)
     lat_grids = np.linspace(lat_min, lat_max, lat_steps)
 
-    lng_steps = int(abs(lng_max - lng_min)
-        * longitude_meters / length_meters)
+    lng_steps = int(
+        abs(lng_max - lng_min) * longitude_meters / length_meters)
     lng_grids = np.linspace(lng_min, lng_max, lng_steps)
 
     return lat_grids, lng_grids

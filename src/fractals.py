@@ -95,7 +95,8 @@ def compute_stats(P, D, reqs_over_time, args, params):
 
         lims = np.where(
             np.logical_and(epsilon >= min_len, epsilon <= max_len))[0]
-        d0_params, res = helpers.compute_least_sq(epsilon[lims],
+        d0_params, res = helpers.compute_least_sq(
+            epsilon[lims],
             box_count[lims])
         d2_params, res = helpers.compute_least_sq(epsilon[lims], p[lims])
         if args.save_results and t % 100 == 0:
@@ -139,7 +140,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
 
     l = """city %s, D0 30Per %.3f, D2 30Per %.3f, D0 mean top 70Per %.3f,
            D2 mean top 70Per %.3f D0 max top 70Per %.3f,
-    	   D2 max top 70Per %.3f """ % (
+           D2 max top 70Per %.3f """ % (
         params.prefix,
         np.percentile(d0, 30),
         np.percentile(d2, 30),
@@ -150,13 +151,11 @@ def compute_stats(P, D, reqs_over_time, args, params):
 
     logging.info(l)
     summary_fd = open(os.path.join(
-        const.stats_dir, 'ss_{}_{}s_{}m_{}m_summary'.format
-            (
-                params.prefix,
-                args.time_bin_width,
-                min_len,
-                max_len
-            )
-        ), 'w')
+        const.stats_dir, 'ss_{}_{}s_{}m_{}m_summary'.format(
+            params.prefix,
+            args.time_bin_width,
+            min_len,
+            max_len
+        )), 'w')
     summary_fd.write(l)
     summary_fd.close()

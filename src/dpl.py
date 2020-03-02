@@ -46,7 +46,7 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
         lat_grids, lng_grids = helpers.grid_area(
             params.start_lat,
             params.end_lat,
-            params.start_lng, params.end_lng, 
+            params.start_lng, params.end_lng,
             node_len)
 
         tot_nodes = len(lat_grids) * len(lng_grids)
@@ -54,8 +54,8 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
         for t, idxs in reqs_over_time.items():
             if len(idxs) <= 10 or \
                 (args.skip_night_hours and
-                helpers.is_night_hour(request_ts_vec[idxs][0],
-                    params.time_zone)):
+                 helpers.is_night_hour(request_ts_vec[idxs][0],
+                                       params.time_zone)):
                 continue
             if t == args.max_time_bin:
                 break
