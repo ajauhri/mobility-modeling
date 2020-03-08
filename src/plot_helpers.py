@@ -73,7 +73,7 @@ def fractal_plot(city, fname, epsilon, d, fit_func, params, **args):
 
 def effective_diameter(city, fname, n_nodes, diameter):
     plt.xlabel('Node count', fontsize=25)
-    plt.ylabel('Effective Diamter', fontsize=25)
+    plt.ylabel('Effective Diameter', fontsize=25)
     plt.plot(n_nodes, diameter, 'kx', markersize=3)
     dirname = os.path.join(const.plot_dir, city, "ed")
     Path(dirname).mkdir(parents=True, exist_ok=True)

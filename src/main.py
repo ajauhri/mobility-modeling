@@ -22,20 +22,20 @@ const.stats_dir = './stats'
 
 def compute_stats(args, params):
     df = pd.read_csv(params.fname, sep=',')
-    request_ts_vec = df.loc[:, ['request_timestamp']].values.astype(np.float64)
+    reqs_ts = df.loc[:, ['request_timestamp']].values.astype(np.float64)
     P = df.loc[:, ['pickup_latitude', 'pickup_longitude']].values.astype(
         np.float64)
     D = df.loc[:, ['dropoff_latitude', 'dropoff_longitude']].values.astype(
         np.float64)
     time_bin_bounds = helpers.get_time_bin_bounds(
-        request_ts_vec,
+        reqs_ts,
         args.time_bin_width)
-    reqs_over_time = helpers.bucket_by_time(time_bin_bounds, request_ts_vec)
+    reqs_over_time = helpers.bucket_by_time(time_bin_bounds, reqs_ts)
     if args.fractal_analysis:
-        fractals.compute_stats(P, D, request_ts_vec, reqs_over_time,
+        fractals.compute_stats(P, D, reqs_ts, reqs_over_time,
                                args, params)
     else:
-        dpl.compute_stats(P, D, request_ts_vec, reqs_over_time, args, params)
+        dpl.compute_stats(P, D, reqs_ts, reqs_over_time, args, params)
 
 
 def main():
@@ -66,7 +66,7 @@ def main():
                         type=int,
                         default=500)
     parser.add_argument("--time_bin_width",
-                        help="time bin width (seconds)",
+                        help="time bin width in seconds",
                         type=int,
                         default=300)
     parser.add_argument("--skip_night_hours",
@@ -75,17 +75,19 @@ def main():
     parser.add_argument(
         "--max_time_bin",
         help="maximum number of time bins of width (--time_bin_width) to read",
-        type=int,
-        default=2016)
+        type=int)
     parser.add_argument(
         "-d", "--debug", help="debug logging level",
         action="store_const", dest="loglevel", const=logging.DEBUG,
         default=logging.INFO)
     args = parser.parse_args()
 
+    if args.max_time_bin == None:
+        args.max_time_bin = int((60 * 60 * 7 * 24) / args.time_bin_width)
+
     logging.basicConfig(
-        format="""[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s
-                - %(message)s""",
+        format=("[%(asctime)s] {%(pathname)s:%(lineno)d} %(levelname)s "
+                "- %(message)s"),
         level=args.loglevel
     )
 

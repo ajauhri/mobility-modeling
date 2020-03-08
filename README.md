@@ -16,10 +16,10 @@ A CSV configuration file should have the following coloumns:
 * `file_name`: path to a csv file with all ride request data and having the following columns:
 
 
-A sample configuration file with one entry would look like:
+A sample configuration file with one entry for the city of San Francisco (SF) would look like:
 ```
-prefix,start_lat,end_lat,start_lng,end_lng,file_name
-sf,32.8400,34.624491,-118.87654,-117.34905,san_francisco.csv
+prefix,start_lat,end_lat,start_lng,end_lng,time_zone,file_name
+sf,32.8400,34.624491,-118.87654,-117.34905,America/Los_Angeles,san_francisco.csv
 ```
 `file_name` in the configuration where all the data resides should have the following columns:
  * request_timestamp

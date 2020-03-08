@@ -144,7 +144,8 @@ def compute_diameter_effective(graph_weights):
     :param graph_weights: graph
 
     """
-    least_max_diameter = 0
+    dists = []
+    max_min_diameter = 0
     for node_id in graph_weights.keys():
         visited_set = {}
         distance = {}
@@ -153,32 +154,34 @@ def compute_diameter_effective(graph_weights):
         distance[node_id] = 0
 
         while len(visited_set) != num_of_nodes:
-            vertex_node = -1
+            vertex = -1
             min_val = sys.maxsize
             for k, v in distance.items():
                 if v < min_val and k not in visited_set:
                     min_val = v
-                    vertex_node = k
+                    vertex = k
 
-            if vertex_node == -1:
+            if vertex == -1:
                 break
 
-            visited_set[vertex_node] = ''
+            visited_set[vertex] = ''
 
-            if vertex_node in graph_weights:
-                for k, v in graph_weights[vertex_node].items():
+            if vertex in graph_weights:
+                for k, v in graph_weights[vertex].items():
                     if k not in visited_set:
                         if k in distance:
-                            if distance[vertex_node] + 1 < distance[k]:
-                                distance[k] = distance[vertex_node] + 1
+                            if distance[vertex] + 1 < distance[k]:
+                                distance[k] = distance[vertex] + 1
                         else:
-                            distance[k] = distance[vertex_node] + 1
+                            distance[k] = distance[vertex] + 1
 
-                        if distance[k] > least_max_diameter:
-                            least_max_diameter = distance[k]
-            del distance[vertex_node]
-
-    return least_max_diameter
+                        dists.append(distance[k])
+                        if distance[k] > max_min_diameter:
+                            max_min_diameter = distance[k]
+            del distance[vertex]
+    ed = np.percentile(dists, 98)
+    #print(ed, max_min_diameter)
+    return ed, max_min_diameter
 
 
 def is_night_hour(epoch, time_zone):
@@ -186,7 +189,7 @@ def is_night_hour(epoch, time_zone):
     dt = pytz.utc.localize(dt)
     to_zone = tz.gettz(time_zone)
     hour = dt.astimezone(to_zone).hour
-    if hour >= 0 and hour <= 5:
+    if hour >= 0 and hour <= 6:
         return True
     else:
         return False

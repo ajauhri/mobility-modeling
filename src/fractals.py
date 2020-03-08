@@ -21,7 +21,7 @@ fractal_limits = {
 }
 
 
-def compute_stats(P, D, reqs_over_time, args, params):
+def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
     logging.info("Performing fractal analysis for {}".format(params.prefix))
     if params.prefix in fractal_limits:
         min_len = fractal_limits[params.prefix][0]
@@ -63,8 +63,12 @@ def compute_stats(P, D, reqs_over_time, args, params):
     for t, idxs in reqs_over_time.items():
         if t == args.max_time_bin:
             break
-
-        if len(idxs) <= 10:
+        if t != 100:
+            continue
+        if len(idxs) <= 10 or \
+            (args.skip_night_hours and
+             helpers.is_night_hour(reqs_ts[idxs[0]],
+                                   params.time_zone)):
             continue
 
         epsilon = []
@@ -88,6 +92,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
             epsilon.append(node_len)
             box_count.append(len(rrg_t.dest_nodes))
             p.append(np.sum(np.array(list(rrg_t.dest_nodes.values()))**2))
+            print(t, epsilon[-1], box_count[-1], p[-1])
 
         epsilon = np.array(epsilon)
         box_count = np.array(box_count)
@@ -101,7 +106,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
         d2_params, res = helpers.compute_least_sq(epsilon[lims], p[lims])
         if args.save_results and t % 100 == 0:
             ph.fractal_plot(
-                params.prefix, 'd0_{}'.format(t), epsilon[lims],
+                params.prefix, 'd0_t{}'.format(t), epsilon[lims],
                 box_count[lims],
                 helpers.fit_func,
                 d0_params,
@@ -110,7 +115,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
                 xlim=[10**2, 10**3.65],
                 ylim=[10**1, 10**3])
             ph.fractal_plot(
-                params.prefix, 'd2_{}'.format(t), epsilon[lims],
+                params.prefix, 'd2_t{}'.format(t), epsilon[lims],
                 p[lims],
                 helpers.fit_func,
                 d2_params,
@@ -126,7 +131,7 @@ def compute_stats(P, D, reqs_over_time, args, params):
                 d2_params[1],
                 len(idxs)))
 
-        logging.debug("city %s, time snapshot %d, D0 %.3f D2 %.3f count %d" % (
+        logging.debug("city %s, time snapshot %d, D0 %.3f D2 %.3f #rides %d" % (
             params.prefix,
             t,
             d0_params[1],
@@ -138,16 +143,14 @@ def compute_stats(P, D, reqs_over_time, args, params):
     d0 = -np.array(d0)
     d2 = np.array(d2)
 
-    l = """city %s, D0 30Per %.3f, D2 30Per %.3f, D0 mean top 70Per %.3f,
-           D2 mean top 70Per %.3f D0 max top 70Per %.3f,
-           D2 max top 70Per %.3f """ % (
+    l = """city %s, D0 mean %.3f,
+           D2 mean %.3f D0 max %.3f,
+           D2 max %.3f """ % (
         params.prefix,
-        np.percentile(d0, 30),
-        np.percentile(d2, 30),
-        np.mean(d0[d0 > np.percentile(d0, 30)]),
-        np.mean(d2[d2 > np.percentile(d2, 30)]),
-        np.max(d0[d0 > np.percentile(d0, 30)]),
-        np.max(d2[d2 > np.percentile(d2, 30)]))
+        np.mean(d0),
+        np.mean(d2),
+        np.max(d0),
+        np.max(d2))
 
     logging.info(l)
     summary_fd = open(os.path.join(

@@ -10,7 +10,7 @@ import const
 import time
 
 
-def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
+def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
     if args.save_results:
         logging.info("Saving results")
         out_file = os.path.join(
@@ -42,6 +42,7 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
         out_degree = Counter()
         diameter = []
         n_rides = []
+        time_bins = []
 
         lat_grids, lng_grids = helpers.grid_area(
             params.start_lat,
@@ -54,7 +55,7 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
         for t, idxs in reqs_over_time.items():
             if len(idxs) <= 10 or \
                 (args.skip_night_hours and
-                 helpers.is_night_hour(request_ts_vec[idxs][0],
+                 helpers.is_night_hour(reqs_ts[idxs[0]],
                                        params.time_zone)):
                 continue
             if t == args.max_time_bin:
@@ -65,22 +66,22 @@ def compute_stats(P, D, request_ts_vec, reqs_over_time, args, params):
             rrg_t.compute_nodes_and_edges()
             rrg_t.compute_node_degree()
 
+            time_bins.append(t)
             n_nodes.append(rrg_t.n_nodes)
             n_edges.append(rrg_t.n_edges)
             n_rides.append(len(idxs))
 
             in_degree += rrg_t.in_degree
             out_degree += rrg_t.out_degree
-
-            diameter.append(
-                helpers.compute_diameter_effective(rrg_t.out_weights))
-
-            logging.debug(
-                    """node len={}m, time_bin={}, num_nodes={}, """
-                    """num_edges={}, diameter={}, #rides={}""".format(
-                        node_len, t, n_nodes[-1], n_edges[-1], diameter[-1],
-                        len(idxs))
-            )
+            d1, d2 = helpers.compute_diameter_effective(rrg_t.out_weights)
+            diameter.append(d1)
+            #logging.debug(
+            #        """node len={}m, time_bin={}, num_nodes={}, """
+            #        """num_edges={}, diameter={}, #rides={}""".format(
+            #            node_len, t, n_nodes[-1], n_edges[-1], diameter[-1],
+            #            len(idxs))
+            #)
+            print("{},{},{},{},{},{},{}".format(node_len, t, n_nodes[-1], n_edges[-1], diameter[-1], d2, len(idxs)))
         p, infodict = helpers.compute_least_sq(n_nodes, n_edges)
         r2 = helpers.compute_r2(n_edges, infodict)
         logging.info(
