@@ -63,8 +63,7 @@ def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
     for t, idxs in reqs_over_time.items():
         if t == args.max_time_bin:
             break
-        if t != 100:
-            continue
+
         if len(idxs) <= 10 or \
             (args.skip_night_hours and
              helpers.is_night_hour(reqs_ts[idxs[0]],
@@ -91,8 +90,13 @@ def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
             rrg_t.init(P[idxs, :], D[idxs, :], lat_grids, lng_grids)
             epsilon.append(node_len)
             box_count.append(len(rrg_t.dest_nodes))
-            p.append(np.sum(np.array(list(rrg_t.dest_nodes.values()))**2))
-            print(t, epsilon[-1], box_count[-1], p[-1])
+            p.append(
+                np.sum(
+                    (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**2
+                )
+            )
+            #print(t, epsilon[-1], box_count[-1], p[-1], len(rrg_t.dest_nodes),
+            #    len(list(rrg_t.dest_nodes.values())))
 
         epsilon = np.array(epsilon)
         box_count = np.array(box_count)
@@ -104,7 +108,7 @@ def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
             epsilon[lims],
             box_count[lims])
         d2_params, res = helpers.compute_least_sq(epsilon[lims], p[lims])
-        if args.save_results and t % 100 == 0:
+        if args.save_results:
             ph.fractal_plot(
                 params.prefix, 'd0_t{}'.format(t), epsilon[lims],
                 box_count[lims],
@@ -134,7 +138,7 @@ def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
         logging.debug("city %s, time snapshot %d, D0 %.3f D2 %.3f #rides %d" % (
             params.prefix,
             t,
-            d0_params[1],
+            -d0_params[1],
             d2_params[1],
             len(idxs)))
         time_idx.append(t)
