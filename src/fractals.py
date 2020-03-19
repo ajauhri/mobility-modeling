@@ -89,29 +89,28 @@ def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
             rrg_t = RRGSnapshot()
             rrg_t.init(P[idxs, :], D[idxs, :], lat_grids, lng_grids)
             epsilon.append(node_len)
-            box_count.append(len(rrg_t.dest_nodes))
+            #box_count.append(len(rrg_t.dest_nodes))
+            box_count.append(
+                np.sum(
+                    (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**0
+                )
+            )
             p.append(
                 np.sum(
                     (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**2
                 )
             )
-            #print(t, epsilon[-1], box_count[-1], p[-1], len(rrg_t.dest_nodes),
-            #    len(list(rrg_t.dest_nodes.values())))
 
         epsilon = np.array(epsilon)
         box_count = np.array(box_count)
         p = np.array(p)
 
-        lims = np.where(
-            np.logical_and(epsilon >= min_len, epsilon <= max_len))[0]
-        d0_params, res = helpers.compute_least_sq(
-            epsilon[lims],
-            box_count[lims])
-        d2_params, res = helpers.compute_least_sq(epsilon[lims], p[lims])
+        d0_params, _ = helpers.compute_least_sq(epsilon, box_count)
+        d2_params, _ = helpers.compute_least_sq(epsilon, p)
         if args.save_results:
             ph.fractal_plot(
-                params.prefix, 'd0_t{}'.format(t), epsilon[lims],
-                box_count[lims],
+                params.prefix, 'd0_t{}'.format(t), epsilon,
+                box_count,
                 helpers.fit_func,
                 d0_params,
                 xlabel=r'$\log \epsilon$', ylabel=r'$\log N(\epsilon)$',
@@ -119,8 +118,8 @@ def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
                 xlim=[10**2, 10**3.65],
                 ylim=[10**1, 10**3])
             ph.fractal_plot(
-                params.prefix, 'd2_t{}'.format(t), epsilon[lims],
-                p[lims],
+                params.prefix, 'd2_t{}'.format(t), epsilon,
+                p,
                 helpers.fit_func,
                 d2_params,
                 xlabel=r'$\log \epsilon$', ylabel=r'$\log S2$',
