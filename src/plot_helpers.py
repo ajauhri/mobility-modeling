@@ -18,17 +18,19 @@ def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
     plt.xlabel('Node count', fontsize=25)
     plt.ylabel('Edge count', fontsize=25)
     plt.tick_params(axis='both', labelsize=15)
-    plt.ylim([1, 10**4])
-    plt.xlim([1, 10**4])
+    #plt.ylim([1, 10**4])
+    #plt.xlim([1, 10**4])
     plt.subplots_adjust(top=0.88)
     plt.plot(n_nodes, n_edges, 'kx', markersize=3)
     plt.plot(n_nodes, fit_func(n_nodes, p), color='r')
     plt.title("C=%.3f, alpha=%.3f" % (p[0], p[1]), fontsize=25)
+    """
     dirname = os.path.join(const.plot_dir, city, "dpl")
     Path(dirname).mkdir(parents=True, exist_ok=True)
     plt.savefig(
         os.path.join(dirname, "{}.png".format(fname)),
         format='png', dpi=500, bbox_inches='tight')
+    """
     plt.clf()
 
 

@@ -22,7 +22,7 @@ const.stats_dir = './stats'
 
 def compute_stats(args, params):
     df = pd.read_csv(params.fname, sep=',')
-    reqs_ts = df.loc[:, ['dropoff_timestamp']].values.astype(np.float64)
+    reqs_ts = df.loc[:, ['request_timestamp']].values.astype(np.float64)
     P = df.loc[:, ['pickup_latitude', 'pickup_longitude']].values.astype(
         np.float64)
     D = df.loc[:, ['dropoff_latitude', 'dropoff_longitude']].values.astype(
@@ -60,11 +60,11 @@ def main():
     parser.add_argument("--min_node_len",
                         help="miniumum length of node (meters)",
                         type=int,
-                        default=50)
+                        default=100)
     parser.add_argument("--max_node_len",
                         help="maximum length of node (meters)",
                         type=int,
-                        default=500)
+                        default=100)
     parser.add_argument("--time_bin_width",
                         help="time bin width in seconds",
                         type=int,

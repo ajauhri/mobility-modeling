@@ -85,7 +85,7 @@ def get_node(lat_grids, lng_grids, p):
     return node, lat_cell - 1, lng_cell - 1
 
 
-def compute_least_sq(x, y):
+def compute_least_sq(x, y, with_const=True):
     guess = [1, 1]
     params, cov, infodict, mesg, iter = scimin.leastsq(
         resi, guess, args=(x, y),
@@ -93,7 +93,7 @@ def compute_least_sq(x, y):
     return params, infodict
 
 
-def fit_func(x, p):
+def fit(x, p):
     """
     Linear fit function which empirically which relates number of edges
     to number of nodes
@@ -115,7 +115,7 @@ def resi(p, x, y):
     :param y
     :return: residual vector of same dimenstion as n_nodes
     """
-    return y - fit_func(x, p)
+    return y - fit(x, p)
 
 
 class Params(object):
@@ -193,3 +193,25 @@ def is_night_hour(epoch, time_zone):
         return True
     else:
         return False
+
+
+def theor_degree_exp(alpha):
+    """
+    nodes = np.array(nodes)
+    n = 4*nodes**(alpha - 1) + 1
+    d = 2*nodes**(alpha - 1)
+    return n/d
+    """
+    return 2/alpha
+
+
+def real_degree_exp(rrg_t):
+    node_degree = rrg_t.in_degree + rrg_t.out_degree
+    node_degree_arr = np.array([[k, v] for k, v in node_degree.items()])
+    return compute_mle(node_degree_arr[:, 0])
+
+
+def compute_mle(x):
+    n = len(x)
+    x_min = np.min(x)
+    return 1 + (n * (1 / (np.sum(np.log(x/x_min)))))
