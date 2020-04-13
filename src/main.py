@@ -14,7 +14,7 @@ import logging
 
 import const
 import helpers
-import dpl
+from temporal import Temporal
 import fractals
 
 const.stats_dir = './stats'
@@ -35,7 +35,8 @@ def compute_stats(args, params):
         fractals.compute_stats(P, D, reqs_ts, reqs_over_time,
                                args, params)
     else:
-        dpl.compute_stats(P, D, reqs_ts, reqs_over_time, args, params)
+        a = Temporal(P, D, reqs_ts, reqs_over_time, args, params)
+    a.compute_stats()
 
 
 def main():
