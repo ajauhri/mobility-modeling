@@ -27,15 +27,15 @@ class Temporal:
 
     def _compute_dpl(self, key):
         p, infodict = helpers.compute_least_sq(
-            self.n_nodes[key][10:],
-            self.n_edges[key][10:])
-        r2 = helpers.compute_r2(self.n_edges[key][10:], infodict)
+            self.n_nodes[key],
+            self.n_edges[key])
+        r2 = helpers.compute_r2(self.n_edges[key], infodict)
         return r2, p
 
 
     def _print_debug_stats(self, node_len, t, n):
         logging.debug(
-            """node len={}m, time_bin={}, #rides={};\n {}: num_nodes={}, """
+            """\n node len={}m, time_bin={}, #rides={};\n {}: num_nodes={}, """
             """num_edges={}, degree_exp={:.3f};\n {}: num_nodes={}, """
             """num_edges={}, degree_exp={:.3f}; """.format(
                 node_len,
@@ -76,12 +76,15 @@ class Temporal:
         fname = "{}_{}_n{}_t{}".format(key, t, node_len,
             self.args.time_bin_width)
         ph.dpl_plot(self.params.prefix,
-            "dpl_" + fname, self.n_nodes[key],
+            fname, self.n_nodes[key],
             self.n_edges[key],
             helpers.fit_func,
             dpl_params)
-        ph.node_degree_exp_plot(self.params.prefix, "degree_" + fname,
+        ph.node_degree_exp_plot(self.params.prefix, fname,
             self.n_nodes[key], self.node_degree_exp[key])
+        ph.node_degree_plot(self.params.prefix, fname,
+            self.rrg_t[key].in_degree + self.rrg_t[key].out_degree)
+
 
 
     def __init__(self, P, D, reqs_ts, reqs_over_time, args, params):
@@ -144,7 +147,7 @@ class Temporal:
             tot_nodes = len(lat_grids) * len(lng_grids)
 
             for t, idxs in self.reqs_over_time.items():
-                if len(idxs) <= 10 or (self.args.skip_night_hours and \
+                if len(idxs) <= 100 or (self.args.skip_night_hours and \
                     helpers.is_night_hour(
                         self.reqs_ts[idxs[0]],
                         self.params.time_zone)):
@@ -154,7 +157,7 @@ class Temporal:
                 if t == self.args.max_time_bin:
                     break
 
-                if len(self.n_nodes['every_n_ts']) == 60:
+                if len(self.n_nodes['every_n_ts']) == self.params['cons_ts']:
                     r2, p = self._compute_dpl('every_n_ts')
                     theor_deg_exp = helpers.theor_degree_exp(p[1])
                     self._print_info_stats('every_n_ts', p,

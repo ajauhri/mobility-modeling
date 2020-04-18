@@ -61,11 +61,11 @@ def main():
     parser.add_argument("--min_node_len",
                         help="miniumum length of node (meters)",
                         type=int,
-                        default=100)
+                        default=50)
     parser.add_argument("--max_node_len",
                         help="maximum length of node (meters)",
                         type=int,
-                        default=100)
+                        default=50)
     parser.add_argument("--time_bin_width",
                         help="time bin width in seconds",
                         type=int,
