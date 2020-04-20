@@ -1,5 +1,7 @@
 import sys
-
+'''
+Defining constants for the functions
+'''
 
 class _const:
     class ConstError(TypeError):

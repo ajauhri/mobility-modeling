@@ -1,17 +1,12 @@
-import sys
 import logging
-import pandas
-import math
-import numpy as np
-import matplotlib.pylab as plt
-import matplotlib.cm as cm
-from collections import Counter
 import os
+import numpy as np
 
-from rrg_snapshot import RRGSnapshot
-import helpers
-import const
-import plot_helpers as ph
+import utils.const as const
+import utils.helpers as helpers
+import utils.plot_helpers as ph
+
+from utils.rrg_snapshot import RRGSnapshot
 
 fractal_limits = {
     "new_york": [450, 2500],

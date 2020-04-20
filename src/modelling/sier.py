@@ -4,8 +4,8 @@ Sierpinski triangle.
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import plot_helpers as ph
-import helpers
+import utils.plot_helpers as ph
+import utils.helpers as helpers
 
 size = 4096
 first_row = np.zeros(size, dtype=int)

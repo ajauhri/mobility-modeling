@@ -3,7 +3,7 @@ import numpy as np
 from pathlib import Path
 import os
 
-import const
+import utils.const as const
 
 const.plot_dir = './plots'
 

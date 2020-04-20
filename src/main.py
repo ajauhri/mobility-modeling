@@ -1,10 +1,9 @@
 #!/usr/bin/env python3.6
 import argparse
-import sys
+import logging
+
 import numpy as np
 import pandas as pd
-import os
-import logging
 
 """
 -- number of nodes active relative to the maximum number of nodes
@@ -12,10 +11,13 @@ import logging
 -- clustering tiles
 """
 
-import const
-import helpers
-import dpl
-import fractals
+import utils.const as const
+import utils.helpers as helpers
+from applications.placement.algorithms import poisson as p
+from applications.placement import placement
+
+import modelling.dpl as dpl
+import modelling.fractals as fractals
 
 const.stats_dir = './stats'
 
@@ -99,5 +101,9 @@ def main():
         p = helpers.Params(r)
         compute_stats(args, p)
 
+def main_1():
+    print("hello")
+
 if __name__ == "__main__":
     main()
+

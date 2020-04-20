@@ -1,13 +1,8 @@
-from __future__ import division
-
 from dateutil import tz
-import matplotlib.pylab as plt
-import matplotlib.cm as cm
 import matplotlib
 import numpy as np
 import logging
 import scipy.optimize as scimin
-import os
 import sys
 import pytz
 import datetime
@@ -209,7 +204,6 @@ def real_degree_exp(rrg_t):
     node_degree = rrg_t.in_degree + rrg_t.out_degree
     node_degree_arr = np.array([[k, v] for k, v in node_degree.items()])
     return compute_mle(node_degree_arr[:, 0])
-
 
 def compute_mle(x):
     n = len(x)
