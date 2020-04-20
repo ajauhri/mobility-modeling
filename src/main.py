@@ -5,19 +5,16 @@ import logging
 import numpy as np
 import pandas as pd
 
+import utils.const as const
+import utils.helpers as helpers
+import modelling.fractals as fractals
+from modelling.temporal import Temporal
+
 """
 -- number of nodes active relative to the maximum number of nodes
 -- distances of tiles
 -- clustering tiles
 """
-
-import utils.const as const
-import utils.helpers as helpers
-from applications.placement.algorithms import poisson as p
-from applications.placement import placement
-
-import modelling.dpl as dpl
-import modelling.fractals as fractals
 
 const.stats_dir = './stats'
 
@@ -37,7 +34,8 @@ def compute_stats(args, params):
         fractals.compute_stats(P, D, reqs_ts, reqs_over_time,
                                args, params)
     else:
-        dpl.compute_stats(P, D, reqs_ts, reqs_over_time, args, params)
+        a = Temporal(P, D, reqs_ts, reqs_over_time, args, params)
+    a.compute_stats()
 
 
 def main():
@@ -62,11 +60,11 @@ def main():
     parser.add_argument("--min_node_len",
                         help="miniumum length of node (meters)",
                         type=int,
-                        default=100)
+                        default=50)
     parser.add_argument("--max_node_len",
                         help="maximum length of node (meters)",
                         type=int,
-                        default=100)
+                        default=50)
     parser.add_argument("--time_bin_width",
                         help="time bin width in seconds",
                         type=int,
@@ -100,9 +98,6 @@ def main():
             break
         p = helpers.Params(r)
         compute_stats(args, p)
-
-def main_1():
-    print("hello")
 
 if __name__ == "__main__":
     main()

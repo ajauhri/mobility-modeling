@@ -88,7 +88,7 @@ def compute_least_sq(x, y, with_const=True):
     return params, infodict
 
 
-def fit(x, p):
+def fit_func(x, p):
     """
     Linear fit function which empirically which relates number of edges
     to number of nodes
@@ -110,7 +110,7 @@ def resi(p, x, y):
     :param y
     :return: residual vector of same dimenstion as n_nodes
     """
-    return y - fit(x, p)
+    return y - fit_func(x, p)
 
 
 class Params(object):

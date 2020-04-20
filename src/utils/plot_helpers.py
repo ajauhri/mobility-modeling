@@ -15,8 +15,8 @@ def enable_log_scale():
 
 def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
     enable_log_scale()
-    plt.xlabel('Node count', fontsize=25)
-    plt.ylabel('Edge count', fontsize=25)
+    plt.xlabel('Number of nodes', fontsize=25)
+    plt.ylabel('Number of edges', fontsize=25)
     plt.tick_params(axis='both', labelsize=15)
     #plt.ylim([1, 10**4])
     #plt.xlim([1, 10**4])
@@ -24,33 +24,39 @@ def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
     plt.plot(n_nodes, n_edges, 'kx', markersize=3)
     plt.plot(n_nodes, fit_func(n_nodes, p), color='r')
     plt.title("C=%.3f, alpha=%.3f" % (p[0], p[1]), fontsize=25)
-    """
     dirname = os.path.join(const.plot_dir, city, "dpl")
+    _save_fig(dirname, fname)
+    plt.clf()
+
+
+def _save_fig(dirname, fname):
     Path(dirname).mkdir(parents=True, exist_ok=True)
     plt.savefig(
         os.path.join(dirname, "{}.png".format(fname)),
         format='png', dpi=500, bbox_inches='tight')
-    """
+
+
+def node_degree_exp_plot(city, fname, n_nodes, exp):
+    plt.xlabel('Number of nodes', fontsize=25)
+    plt.ylabel('Degree exponent', fontsize=25)
+    plt.tick_params(axis='both', labelsize=15)
+    plt.subplots_adjust(top=0.88)
+    plt.plot(n_nodes, exp, 'kx', markersize=3)
+    dirname = os.path.join(const.plot_dir, city, "degree_exp")
+    _save_fig(dirname, fname)
     plt.clf()
 
 
-def node_degree_plot(city, fname, degree, in_degree):
-    if in_degree:
-        label = 'in_degree'
-    else:
-        label = 'out_degree'
+def node_degree_plot(city, fname, degree):
     vals = [[k, v] for k, v in degree.items()]
     vals = np.array(vals)
     enable_log_scale()
     plt.scatter(vals[:, 0], vals[:, 1], marker='x', s=20, c='k')
-    plt.xlabel('Node {}'.format(label), fontsize=25)
+    plt.xlabel('Node degree', fontsize=25)
     plt.ylabel('Number of nodes', fontsize=25)
     plt.tick_params(axis='both', labelsize=15)
-    dirname = os.path.join(const.plot_dir, city, label)
-    Path(dirname).mkdir(parents=True, exist_ok=True)
-    plt.savefig(
-        os.path.join(dirname, "{}.png".format(fname)),
-        format='png', dpi=500, bbox_inches='tight')
+    dirname = os.path.join(const.plot_dir, city, "degree")
+    _save_fig(dirname, fname)
     plt.clf()
 
 
@@ -66,10 +72,7 @@ def fractal_plot(city, fname, epsilon, d, fit_func, params, **args):
     plt.plot(epsilon, fit_func(epsilon, params), color='r', linewidth=2)
     plt.title("C=%.3f, alpha=%.3f" % (params[0], params[1]), fontsize=25)
     dirname = os.path.join(const.plot_dir, city, "fd")
-    Path(dirname).mkdir(parents=True, exist_ok=True)
-    plt.savefig(
-        os.path.join(dirname, "{}.png".format(fname)),
-        format='png', dpi=500, bbox_tight='tight')
+    _save_fig(dirname, fname)
     plt.clf()
 
 

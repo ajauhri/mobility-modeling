@@ -12,6 +12,7 @@ $ ./src/main.py --input <path_to_configuration_file>
 A CSV configuration file should have the following coloumns:
 * `prefix`: unique identifier for a city like `sf` for San Francisco.
 * `start_lat`, `end_lat`, `start_lng`, `end_lng`: define a quadrilateral of the city boundary.
+* `cons_ts`: Consecutive time snapshots used for analysis
 * `time_zone`: Local time zone of the city like `America/Los_Angeles`
 * `file_name`: path to a csv file with all ride request data and having the following columns:
 
