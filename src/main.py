@@ -10,12 +10,6 @@ import utils.helpers as helpers
 import modelling.fractals as fractals
 from modelling.temporal import Temporal
 
-"""
--- number of nodes active relative to the maximum number of nodes
--- distances of tiles
--- clustering tiles
-"""
-
 const.stats_dir = './stats'
 
 
@@ -60,11 +54,11 @@ def main():
     parser.add_argument("--min_node_len",
                         help="miniumum length of node (meters)",
                         type=int,
-                        default=50)
+                        default=100)
     parser.add_argument("--max_node_len",
                         help="maximum length of node (meters)",
                         type=int,
-                        default=50)
+                        default=100)
     parser.add_argument("--time_bin_width",
                         help="time bin width in seconds",
                         type=int,

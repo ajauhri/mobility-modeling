@@ -10,6 +10,7 @@ import utils.helpers as helpers
 import utils.const as const
 import time
 
+
 class Temporal:
     def _compute_real_node_degree_exp(self, key):
         if len(self.rrg_t[key].in_degree) >= 2:
@@ -166,6 +167,9 @@ class Temporal:
                         self._generate_plots('every_n_ts',
                             p, node_len, t)
 
+                    #d1, d2 = helpers.compute_diameter_effective(
+                    #    self.rrg_t['every_n_ts'].out_weights)
+
                     self.n_nodes['every_n_ts'] = []
                     self.n_edges['every_n_ts'] = []
                     self.node_degree_exp['every_n_ts'] = []
@@ -183,7 +187,6 @@ class Temporal:
                 self._print_debug_stats(node_len, t, len(idxs))
 
                 n_rides.append(len(idxs))
-                #d1, d2 = helpers.compute_diameter_effective(rrg_t.out_weights)
 
             r2, p = self._compute_dpl('each_ts')
             theor_deg_exp = helpers.theor_degree_exp(p[1])
@@ -197,9 +200,4 @@ class Temporal:
                     np.mean(self.n_edges['each_ts']),
                     tot_nodes))
                 self._generate_plots('each_ts', p, node_len, t)
-
-                #ph.node_degree_plot(params.prefix, fname, node_degree, True)
-                #ph.node_degree_plot(params.prefix, fname, in_degree, True)
-                #ph.node_degree_plot(params.prefix, fname, out_degree, False)
-                #ph.effective_diameter(params.prefix, fname, n_nodes, diameter)
                 self.out_fd.close()
