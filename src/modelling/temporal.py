@@ -4,10 +4,10 @@ from collections import Counter
 import os
 import networkx as nx
 
-from rrg_snapshot import RRGSnapshot
-import plot_helpers as ph
-import helpers
-import const
+from utils.rrg_snapshot import RRGSnapshot
+import utils.plot_helpers as ph
+import utils.helpers as helpers
+import utils.const as const
 import time
 
 class Temporal:
