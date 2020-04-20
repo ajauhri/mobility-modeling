@@ -1,13 +1,10 @@
 from dateutil import tz
-import matplotlib
 import numpy as np
 import logging
 import scipy.optimize as scimin
 import sys
 import pytz
 import datetime
-
-matplotlib.use('agg', warn=False, force=True)
 
 latitude_meters = 111.2 * 1000
 longitude_meters = 111 * 1000
@@ -120,6 +117,7 @@ class Params(object):
         self.end_lat = r['end_lat']
         self.start_lng = r['start_lng']
         self.end_lng = r['end_lng']
+        self.cons_ts = r['cons_ts']
         self.fname = r['file_name']
         self.time_zone = r['time_zone']
 

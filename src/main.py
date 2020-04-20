@@ -91,7 +91,8 @@ def main():
         level=args.loglevel
     )
 
-    df = pd.read_csv(args.input, sep=',')
+    df = pd.read_csv(args.input, sep=',', dtype={'start_lat':float,
+        'end_lat':float, 'start_lng':float, 'end_lng':float, 'cons_ts':int})
 
     for i, r in df.iterrows():
         if args.cities == i:
