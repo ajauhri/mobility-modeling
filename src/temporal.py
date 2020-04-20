@@ -54,22 +54,22 @@ class Temporal:
 
 
     def _print_info_stats(self, key, dpl_params, r2, theor_deg_exp,
-        node_len, tot_nodes):
+        node_len, tot_nodes, t):
         logging.info(
-            """%s for %s; node_len=%dm;\n dpl:C=%.3f, exp=%.3f, """
-            """r2=%.3f; mean nodes=%d, edges=%d, tot possible nodes=%d;\n """
-            """degree_exp:theor=%.3f real(avg.)=%.3f"""
-            % (key,
-               self.params.prefix,
-               node_len,
-               dpl_params[0],
-               dpl_params[1],
-               r2,
-               np.mean(self.n_nodes[key]),
-               np.mean(self.n_edges[key]),
-               tot_nodes,
-               theor_deg_exp,
-               np.mean(self.node_degree_exp[key])))
+            """{} for {}; time_bin={}, node_len={}m;\n dpl:C={:.3f}, exp={:.3f}, """
+            """r2={:.3f}; mean nodes={:.0f}, edges={:.0f}, tot possible nodes={};\n """
+            """degree_exp:theor={:.3f} real(avg.)={:.3f}""".format(
+                key,
+                self.params.prefix,
+                t,
+                node_len,
+                dpl_params[0], dpl_params[1],
+                r2,
+                np.mean(self.n_nodes[key]),
+                np.mean(self.n_edges[key]),
+                tot_nodes,
+                theor_deg_exp,
+                np.mean(self.node_degree_exp[key])))
 
 
     def _generate_plots(self, key, dpl_params, node_len, t):
@@ -136,7 +136,6 @@ class Temporal:
             50):
 
             n_rides = []
-
             lat_grids, lng_grids = helpers.grid_area(
                 self.params.start_lat,
                 self.params.end_lat,
@@ -157,11 +156,11 @@ class Temporal:
                 if t == self.args.max_time_bin:
                     break
 
-                if len(self.n_nodes['every_n_ts']) == self.params['cons_ts']:
+                if len(self.n_nodes['every_n_ts']) == self.params.cons_ts:
                     r2, p = self._compute_dpl('every_n_ts')
                     theor_deg_exp = helpers.theor_degree_exp(p[1])
                     self._print_info_stats('every_n_ts', p,
-                        r2, theor_deg_exp, node_len, tot_nodes)
+                        r2, theor_deg_exp, node_len, tot_nodes, t)
 
                     if self.args.save_results:
                         self._generate_plots('every_n_ts',
@@ -189,7 +188,7 @@ class Temporal:
             r2, p = self._compute_dpl('each_ts')
             theor_deg_exp = helpers.theor_degree_exp(p[1])
             self._print_info_stats('each_ts', p, r2, theor_deg_exp,
-                node_len, tot_nodes)
+                node_len, tot_nodes, t)
 
             if self.args.save_results:
                 self.out_fd.write("%d, %.3f, %.3f, %.3f, %d, %d, %d\n".format(

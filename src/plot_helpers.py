@@ -1,4 +1,16 @@
+import matplotlib
+matplotlib.use('pgf')
+
 import matplotlib.pylab as plt
+plt.rcParams.update({
+    "font.family": "serif",
+    "font.serif": [],                    # use latex default serif font
+    "font.sans-serif": ["DejaVu Sans"],  # use a specific sans-serif font
+    "pgf.rcfonts": False,
+    "text.usetex": True,
+    "pgf.texsystem": "pdflatex",
+})
+
 import numpy as np
 from pathlib import Path
 import os
@@ -11,6 +23,12 @@ const.plot_dir = './plots'
 def enable_log_scale():
     plt.xscale('log')
     plt.yscale('log')
+
+
+def _save_fig(dirname, fname):
+    Path(dirname).mkdir(parents=True, exist_ok=True)
+    plt.savefig(
+        os.path.join(dirname, "{}.png".format(fname)))
 
 
 def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
@@ -27,13 +45,6 @@ def dpl_plot(city, fname, n_nodes, n_edges, fit_func, p):
     dirname = os.path.join(const.plot_dir, city, "dpl")
     _save_fig(dirname, fname)
     plt.clf()
-
-
-def _save_fig(dirname, fname):
-    Path(dirname).mkdir(parents=True, exist_ok=True)
-    plt.savefig(
-        os.path.join(dirname, "{}.png".format(fname)),
-        format='png', dpi=500, bbox_inches='tight')
 
 
 def node_degree_exp_plot(city, fname, n_nodes, exp):
