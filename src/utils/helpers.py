@@ -142,20 +142,15 @@ def compute_diameter_effective(graph_weights):
     for node_id in graph_weights.keys():
         visited_set = {}
         distance = {}
+        distance_map = {}
 
-        num_of_nodes = len(graph_weights)
+        distance_map[0] = set([node_id])
         distance[node_id] = 0
+        while len(distance_map) > 0:
 
-        while len(visited_set) != num_of_nodes:
-            vertex = -1
-            min_val = sys.maxsize
-            for k, v in distance.items():
-                if v < min_val and k not in visited_set:
-                    min_val = v
-                    vertex = k
-
-            if vertex == -1:
-                break
+            min_val_node = min(distance_map.keys())
+            node_set = distance_map[min_val_node]
+            vertex = node_set.pop()
 
             visited_set[vertex] = ''
 
@@ -164,17 +159,49 @@ def compute_diameter_effective(graph_weights):
                     if k not in visited_set:
                         if k in distance:
                             if distance[vertex] + 1 < distance[k]:
-                                distance[k] = distance[vertex] + 1
+                                new_dist = distance[vertex] + 1
+
+                                # Add new distance value in map for k
+                                add_distance_map(distance_map, new_dist, k)
+
+                                # Clear old distance value from map for k
+                                clean_distance_map(distance_map, distance[k], k)
+
+                                distance[k] = new_dist
                         else:
-                            distance[k] = distance[vertex] + 1
+                            new_dist = distance[vertex] + 1
+                            distance[k] = new_dist
+
+                            # Add new distance value in map for k
+                            add_distance_map(distance_map, new_dist, k)
 
                         dists.append(distance[k])
                         if distance[k] > max_min_diameter:
                             max_min_diameter = distance[k]
+
+            # Clear old distance value from map for vertex
+            if len(node_set) == 0:
+                del distance_map[min_val_node]
             del distance[vertex]
+
+
     ed = np.percentile(dists, 98)
     #print(ed, max_min_diameter)
     return ed, max_min_diameter
+
+def add_distance_map(dist_map, new_dist, node):
+    if new_dist in dist_map:
+        dist_map[new_dist].add(node)
+    else:
+        dist_map[new_dist] = set([node])
+
+
+def clean_distance_map(dist_map, old_distance, node):
+    dist_old_set = dist_map[old_distance]
+    if len(dist_old_set) == 1:
+        del dist_map[old_distance]
+    else:
+        dist_old_set.remove(node)
 
 
 def is_night_hour(epoch, time_zone):
