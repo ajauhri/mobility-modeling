@@ -47,18 +47,20 @@ class Temporal:
         if week == 1:
             plt.yticks([])
             plt.legend()
-            plt.xlabel("time", fontsize=20)
+            plt.xlabel("time", fontsize=18)
             plt.xticks(np.arange(min(x), max(x) + 1, 96))
             ax.set_xticklabels(
                 ["Fri", "Sat", "Sun", "Mon", "Tue", "Wed", "Thur"],
                 size='medium')
             ax.xaxis.set_tick_params(width=1.5, length=9)
             plt.xlim([0, 680])
-            plt.ylabel("volume of ride requests", fontsize=20)
+            plt.ylim([0, 7000])
+            plt.ylabel("volume of ride requests", fontsize=18)
             plot_path = os.path.join(const.plot_dir,
                 "volume_time_series_{}.pdf".format(self.params.prefix))
             plt.savefig(plot_path, format='pdf', dpi=800, bbox_inches='tight')
             logging.info("Plot saved at {}".format(plot_path))
+            plt.clf()
 
 
 def compute_stats(args, params, week, ax):
@@ -111,12 +113,14 @@ def main():
         'end_lat':float, 'start_lng':float, 'end_lng':float, 'cons_ts':int})
 
     fig, ax = plt.subplots()
+    week_i = 0
     for i, r in df.iterrows():
-        # we are plotting for only two weeks
-        if i == 2:
-            break
+        # we assume two consecutive rows are present for each city
+        if i % 2 == 0:
+            week_i = 0
         p = helpers.Params(r)
-        compute_stats(args, p, i, ax)
+        compute_stats(args, p, week_i, ax)
+        week_i += 1
 
 
 if __name__ == "__main__":
