@@ -54,7 +54,7 @@ class Temporal:
                 size='medium')
             ax.xaxis.set_tick_params(width=1.5, length=9)
             plt.xlim([0, 680])
-            plt.ylim([0, 7000])
+            plt.ylim([0, 8000])
             plt.ylabel("volume of ride requests", fontsize=18)
             plot_path = os.path.join(const.plot_dir,
                 "volume_time_series_{}.pdf".format(self.params.prefix))
@@ -112,12 +112,12 @@ def main():
     df = pd.read_csv(args.input, sep=',', dtype={'start_lat':float,
         'end_lat':float, 'start_lng':float, 'end_lng':float, 'cons_ts':int})
 
-    fig, ax = plt.subplots()
     week_i = 0
     for i, r in df.iterrows():
         # we assume two consecutive rows are present for each city
         if i % 2 == 0:
             week_i = 0
+            fig, ax = plt.subplots()
         p = helpers.Params(r)
         compute_stats(args, p, week_i, ax)
         week_i += 1

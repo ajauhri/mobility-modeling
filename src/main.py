@@ -76,7 +76,7 @@ def main():
         default=logging.INFO)
     args = parser.parse_args()
 
-    if args.max_time_bin == None:
+    if args.max_time_bin is None:
         args.max_time_bin = int((60 * 60 * 7 * 24) / args.time_bin_width)
 
     logging.basicConfig(
@@ -85,8 +85,12 @@ def main():
         level=args.loglevel
     )
 
-    df = pd.read_csv(args.input, sep=',', dtype={'start_lat':float,
-        'end_lat':float, 'start_lng':float, 'end_lng':float, 'cons_ts':int})
+    df = pd.read_csv(args.input, sep=',', dtype={
+        'start_lat': float,
+        'end_lat': float,
+        'start_lng': float,
+        'end_lng': float,
+        'cons_ts': int})
 
     for i, r in df.iterrows():
         if args.cities == i:

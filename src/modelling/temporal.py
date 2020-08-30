@@ -16,15 +16,16 @@ class Temporal:
         if len(self.rrg_t[key].in_degree) >= 2:
             degree_mle_exp = helpers.real_degree_exp(self.rrg_t[key])
             self.node_degree_exp[key].append(degree_mle_exp)
-
+            return True
+        return False
 
     def _update_rrg_and_attrs(self, key, P, D, lat_grids, lng_grids, t):
         self.rrg_t[key].init(P, D, lat_grids, lng_grids)
         self.rrg_t[key].compute_nodes_and_edges()
         self.rrg_t[key].compute_node_degree()
-        self.n_nodes[key].append(self.rrg_t[key].n_nodes)
-        self.n_edges[key].append(self.rrg_t[key].n_edges)
-        self._compute_real_node_degree_exp(key)
+        if self._compute_real_node_degree_exp(key):
+            self.n_nodes[key].append(self.rrg_t[key].n_nodes)
+            self.n_edges[key].append(self.rrg_t[key].n_edges)
 
     def _compute_dpl(self, key):
         p, infodict = helpers.compute_least_sq(
@@ -32,7 +33,6 @@ class Temporal:
             self.n_edges[key])
         r2 = helpers.compute_r2(self.n_edges[key], infodict)
         return r2, p
-
 
     def _print_debug_stats(self, node_len, t, n):
         logging.debug(
@@ -46,20 +46,20 @@ class Temporal:
                 self.n_edges['each_ts'][-1],
                 self.node_degree_exp['each_ts'][-1],
                 'every_n_ts',
-                self.n_nodes['every_n_ts'][-1]
-                    if len(self.n_nodes['every_n_ts']) else 0,
-                self.n_edges['every_n_ts'][-1]
-                    if len(self.n_edges['every_n_ts']) else 0,
-                self.node_degree_exp['every_n_ts'][-1]
-                    if len(self.node_degree_exp['every_n_ts']) else 0))
-
+                self.n_nodes['every_n_ts'][-1] if len(
+                    self.n_nodes['every_n_ts']) else 0,
+                self.n_edges['every_n_ts'][-1] if len(
+                    self.n_edges['every_n_ts']) else 0,
+                self.node_degree_exp['every_n_ts'][-1] if len(
+                    self.node_degree_exp['every_n_ts']) else 0))
 
     def _print_info_stats(self, key, dpl_params, r2, theor_deg_exp,
-        node_len, tot_nodes, t):
+                          node_len, tot_nodes, t):
         logging.info(
-            """{} for {}; time_bin={}, node_len={}m;\n dpl:C={:.3f}, exp={:.3f}, """
-            """r2={:.3f}; mean nodes={:.0f}, edges={:.0f}, tot possible nodes={};\n """
-            """degree_exp:theor={:.3f} real(avg.)={:.3f}""".format(
+            """{} for {}; time_bin={}, node_len={}m;\n dpl:C={:.3f}, """
+            """exp={:.3f}, r2={:.3f}; mean nodes={:.0f}, edges={:.0f}, """
+            """tot possible nodes={};\n degree_exp:theor={:.3f} """
+            """real(avg.)={:.3f}""".format(
                 key,
                 self.params.prefix,
                 t,
@@ -72,21 +72,32 @@ class Temporal:
                 theor_deg_exp,
                 np.mean(self.node_degree_exp[key])))
 
+    def _save_stats(self, key, dpl_params, r2, theor_deg_exp, node_len,
+                    tot_nodes, t):
+
+        if self.args.save_results:
+            self.out_fd[key].write("{}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {:.3f}, {:.3f}, {}\n".format(
+                node_len, dpl_params[0], dpl_params[1], r2,
+                np.mean(self.n_nodes['each_ts']),
+                np.mean(self.n_edges['each_ts']),
+                theor_deg_exp,
+                np.mean(self.node_degree_exp[key]),
+                tot_nodes))
 
     def _generate_plots(self, key, dpl_params, node_len, t):
-        fname = "{}_{}_n{}_t{}".format(key, t, node_len,
-            self.args.time_bin_width)
-        ph.dpl_plot(self.params.prefix,
-            fname, self.n_nodes[key],
-            self.n_edges[key],
-            helpers.fit_func,
-            dpl_params)
-        ph.node_degree_exp_plot(self.params.prefix, fname,
-            self.n_nodes[key], self.node_degree_exp[key])
-        ph.node_degree_plot(self.params.prefix, fname,
-            self.rrg_t[key].in_degree + self.rrg_t[key].out_degree)
-
-
+        if self.args.save_results:
+            fname = "{}_{}_n{}_t{}".format(key, t, node_len,
+                                           self.args.time_bin_width)
+            ph.dpl_plot(self.params.prefix,
+                        fname, self.n_nodes[key],
+                        self.n_edges[key],
+                        helpers.fit_func,
+                        dpl_params)
+            ph.node_degree_exp_plot(self.params.prefix, fname, self.n_nodes[key],
+                                    self.node_degree_exp[key])
+            ph.node_degree_plot(
+                self.params.prefix, fname,
+                self.rrg_t[key].in_degree + self.rrg_t[key].out_degree)
 
     def __init__(self, P, D, reqs_ts, reqs_over_time, args, params):
         self.P = P
@@ -104,6 +115,7 @@ class Temporal:
         self.n_edges = {'each_ts': [], 'every_n_ts': []}
         self.rrg_t = {'each_ts': RRGSnapshot(), 'every_n_ts': RRGSnapshot()}
         self.node_degree_exp = {'each_ts': [], 'every_n_ts': []}
+        self.out_fd = {'each_ts': None, 'every_n_ts': None}
 
         if args.save_results:
             logging.info("Saving results")
@@ -116,9 +128,13 @@ class Temporal:
                     self.args.max_node_len
                 )
             )
-            self.out_fd = open(out_file, 'w')
-            self.out_fd.write(
-                "node_len,c,alpha,r2,mean_nodes,mean_edges,tot_possible_nodes\n")
+            self.out_fd['each_ts'] = open('{}_each_ts'.format(out_file), 'w')
+            self.out_fd['every_n_ts'] = open('{}_every_n_ts_{}'.format(
+                out_file, self.params.cons_ts), 'w')
+            self.out_fd['each_ts'].write(
+                "node_len,c,alpha,r2,mean_nodes,mean_edges,theor_deg_exp,real_deg_exp_mean,tot_possible_nodes\n")
+            self.out_fd['every_n_ts'].write(
+                "node_len,c,alpha,r2,mean_nodes,mean_edges,theor_deg_exp,real_deg_exp_mean,tot_possible_nodes\n")
 
 
     def compute_stats(self):
@@ -147,7 +163,7 @@ class Temporal:
             tot_nodes = len(lat_grids) * len(lng_grids)
 
             for t, idxs in self.reqs_over_time.items():
-                if len(idxs) <= 100 or (self.args.skip_night_hours and \
+                if len(idxs) <= 10 or (self.args.skip_night_hours and \
                     helpers.is_night_hour(
                         self.reqs_ts[idxs[0]],
                         self.params.time_zone)):
@@ -158,14 +174,15 @@ class Temporal:
                     break
 
                 if len(self.n_nodes['every_n_ts']) == self.params.cons_ts:
-                    r2, p = self._compute_dpl('every_n_ts')
-                    theor_deg_exp = helpers.theor_degree_exp(p[1])
-                    self._print_info_stats('every_n_ts', p,
+                    r2, dpl_params = self._compute_dpl('every_n_ts')
+                    theor_deg_exp = helpers.theor_degree_exp(dpl_params[1])
+                    self._print_info_stats('every_n_ts', dpl_params,
                         r2, theor_deg_exp, node_len, tot_nodes, t)
+                    self._save_stats('every_n_ts', dpl_params, r2, theor_deg_exp,
+                        node_len, tot_nodes, t)
 
-                    if self.args.save_results:
-                        self._generate_plots('every_n_ts',
-                            p, node_len, t)
+                    self._generate_plots('every_n_ts',
+                        dpl_params, node_len, t)
 
                     #d1, d2 = helpers.compute_diameter_effective(
                     #    self.rrg_t['every_n_ts'].out_weights)
@@ -188,16 +205,15 @@ class Temporal:
 
                 n_rides.append(len(idxs))
 
-            r2, p = self._compute_dpl('each_ts')
-            theor_deg_exp = helpers.theor_degree_exp(p[1])
-            self._print_info_stats('each_ts', p, r2, theor_deg_exp,
+            r2, dpl_params = self._compute_dpl('each_ts')
+            theor_deg_exp = helpers.theor_degree_exp(dpl_params[1])
+            self._print_info_stats('each_ts', dpl_params, r2, theor_deg_exp,
                 node_len, tot_nodes, t)
 
-            if self.args.save_results:
-                self.out_fd.write("%d, %.3f, %.3f, %.3f, %d, %d, %d\n".format(
-                    node_len, p[0], p[1], r2,
-                    np.mean(self.n_nodes['each_ts']),
-                    np.mean(self.n_edges['each_ts']),
-                    tot_nodes))
-                self._generate_plots('each_ts', p, node_len, t)
-                self.out_fd.close()
+            self._save_stats('each_ts', dpl_params, r2, theor_deg_exp,
+                node_len, tot_nodes, t)
+            self._generate_plots('each_ts', dpl_params, node_len, t)
+
+        if self.args.save_results:
+            self.out_fd['each_ts'].close()
+            self.out_fd['every_n_ts'].close()
