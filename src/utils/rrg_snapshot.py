@@ -106,7 +106,13 @@ class RRGSnapshot(object):
         ))
 
     def compute_node_degree(self):
+        in_degree = []
+        out_degree = []
         for n, conns in self.in_weights.items():
+            in_degree.append(len(conns))
             self.in_degree[len(conns)] += 1
         for n, conns in self.out_weights.items():
+            out_degree.append(len(conns))
             self.out_degree[len(conns)] += 1
+        self.avg_in_degree = np.mean(in_degree)
+        self.avg_out_degree = np.mean(out_degree)

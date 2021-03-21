@@ -70,6 +70,17 @@ def node_degree_plot(city, fname, degree):
     _save_fig(dirname, fname)
     plt.clf()
 
+def avg_degree_plot(city, fname, avg_degree, degree_type):
+    vals = [[i, avg_degree[i]] for i in range(len(avg_degree))]
+    vals = np.array(vals)
+    plt.scatter(vals[:, 0], vals[:, 1], marker='x', s=10, c='k')
+    plt.xlabel('Time snapshots over a week', fontsize=25)
+    plt.ylabel(f'Average {degree_type} degree', fontsize=25)
+    plt.tick_params(axis='both', labelsize=15)
+    dirname = os.path.join(const.plot_dir, city, f"avg_degree_{degree_type}")
+    _save_fig(dirname, fname)
+    plt.clf()
+
 
 def fractal_plot(city, fname, epsilon, d, fit_func, params, **args):
     enable_log_scale()
