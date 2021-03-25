@@ -16,147 +16,156 @@ fractal_limits = {
 }
 
 
-def compute_stats(P, D, reqs_ts, reqs_over_time, args, params):
-    logging.info("Performing fractal analysis for {}".format(params.prefix))
-    if params.prefix in fractal_limits:
-        min_len = fractal_limits[params.prefix][0]
-        max_len = fractal_limits[params.prefix][1]
-    else:
-        min_len = 450
-        max_len = 2500
+class Spatial:
+    def __init__(self, P, D, reqs_ts, reqs_over_time, args, params):
+        self.P = P
+        self.D = D
+        self.reqs_ts = reqs_ts
+        self.reqs_over_time = reqs_over_time
+        self.args = args
+        self.params = params
 
-    logging.info(
-        """Processing city {} with min_node_len={}m, """
-        """max_nodel_len={}m, time_bin_width={}secs, max_time_bin={}""".format(
-            params.prefix,
-            min_len,
-            max_len,
-            args.time_bin_width,
-            args.max_time_bin
-        )
-    )
+    def compute_stats(self):
+        logging.info("Performing fractal analysis for {}".format(self.params.prefix))
+        if self.params.prefix in fractal_limits:
+            min_len = fractal_limits[self.params.prefix][0]
+            max_len = fractal_limits[self.params.prefix][1]
+        else:
+            min_len = 450
+            max_len = 2500
 
-    time_idx = []
-    d2 = []
-    d0 = []
-
-    if args.save_results:
-        logging.info("Saving results")
-        out_file = os.path.join(
-            const.stats_dir, 'ss_{}_{}s_{}m_{}m_details'.format
-            (
-                params.prefix,
-                args.time_bin_width,
+        logging.info(
+            """Processing city {} with min_node_len={}m, """
+            """max_nodel_len={}m, time_bin_width={}secs, max_time_bin={}""".format(
+                self.params.prefix,
                 min_len,
-                max_len
+                max_len,
+                self.args.time_bin_width,
+                self.args.max_time_bin
             )
         )
-        out_fd = open(out_file, 'w')
-        out_fd.write(
-            "time_idx,d0_constant,d0_alpha,d2_constant,d2_alpha,count\n")
 
-    for t, idxs in reqs_over_time.items():
-        if t == args.max_time_bin:
-            break
+        time_idx = []
+        d2 = []
+        d0 = []
 
-        if len(idxs) <= 10 or \
-            (args.skip_night_hours and
-             helpers.is_night_hour(reqs_ts[idxs[0]],
-                                   params.time_zone)):
-            continue
-
-        epsilon = []
-        p = []
-        box_count = []
-        """
-        Step value for node_len will alter the results for instance a step size
-        of 100 meters will give a different exponent for D2 in comparison to
-        a step size of 50 meters.
-        """
-        for node_len in range(min_len, max_len+1, 50):
-            lat_grids, lng_grids = helpers.grid_area(
-                params.start_lat,
-                params.end_lat,
-                params.start_lng,
-                params.end_lng,
-                node_len)
-
-            rrg_t = RRGSnapshot()
-            rrg_t.init(P[idxs, :], D[idxs, :], lat_grids, lng_grids)
-            epsilon.append(node_len)
-            #box_count.append(len(rrg_t.dest_nodes))
-            box_count.append(
-                np.sum(
-                    (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**0
+        if self.args.save_results:
+            logging.info("Saving results")
+            out_file = os.path.join(
+                const.stats_dir, 'ss_{}_{}s_{}m_{}m_details'.format
+                (
+                    self.params.prefix,
+                    self.args.time_bin_width,
+                    min_len,
+                    max_len
                 )
             )
-            p.append(
-                np.sum(
-                    (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**2
+            out_fd = open(out_file, 'w')
+            out_fd.write(
+                "time_idx,d0_constant,d0_alpha,d2_constant,d2_alpha,count\n")
+
+        for t, idxs in self.reqs_over_time.items():
+            if t == self.args.max_time_bin:
+                break
+
+            if len(idxs) <= 10 or \
+                (self.args.skip_night_hours and
+                 helpers.is_night_hour(self.reqs_ts[idxs[0]],
+                                       self.params.time_zone)):
+                continue
+
+            epsilon = []
+            p = []
+            box_count = []
+            """
+            Step value for node_len will alter the results for instance a step size
+            of 100 meters will give a different exponent for D2 in comparison to
+            a step size of 50 meters.
+            """
+            for node_len in range(min_len, max_len+1, 50):
+                lat_grids, lng_grids = helpers.grid_area(
+                    self.params.start_lat,
+                    self.params.end_lat,
+                    self.params.start_lng,
+                    self.params.end_lng,
+                    node_len)
+
+                rrg_t = RRGSnapshot()
+                rrg_t.init(self.P[idxs, :], self.D[idxs, :], lat_grids, lng_grids)
+                epsilon.append(node_len)
+                #box_count.append(len(rrg_t.dest_nodes))
+                box_count.append(
+                    np.sum(
+                        (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**0
+                    )
                 )
-            )
+                p.append(
+                    np.sum(
+                        (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**2
+                    )
+                )
 
-        epsilon = np.array(epsilon)
-        box_count = np.array(box_count)
-        p = np.array(p)
+            epsilon = np.array(epsilon)
+            box_count = np.array(box_count)
+            p = np.array(p)
 
-        d0_params, _ = helpers.compute_least_sq(epsilon, box_count)
-        d2_params, _ = helpers.compute_least_sq(epsilon, p)
-        if args.save_results:
-            ph.fractal_plot(
-                params.prefix, 'd0_t{}'.format(t), epsilon,
-                box_count,
-                helpers.fit_func,
-                d0_params,
-                xlabel=r'$\log \epsilon$', ylabel=r'$\log N(\epsilon)$',
-                prefix='d0_' + str(t),
-                xlim=[10**2, 10**3.65],
-                ylim=[10**1, 10**3])
-            ph.fractal_plot(
-                params.prefix, 'd2_t{}'.format(t), epsilon,
-                p,
-                helpers.fit_func,
-                d2_params,
-                xlabel=r'$\log \epsilon$', ylabel=r'$\log S2$',
-                xlim=[10**2, 10**3.65],
-                ylim=[10**2, 10**4])
-        if args.save_results:
-            out_fd.write("%d, %.3f, %.3f, %.3f, %.3f, %d\n" % (
+            d0_params, _ = helpers.compute_least_sq(epsilon, box_count)
+            d2_params, _ = helpers.compute_least_sq(epsilon, p)
+            if self.args.save_results:
+                ph.fractal_plot(
+                    params.prefix, 'd0_t{}'.format(t), epsilon,
+                    box_count,
+                    helpers.fit_func,
+                    d0_params,
+                    xlabel=r'$\log \epsilon$', ylabel=r'$\log N(\epsilon)$',
+                    prefix='d0_' + str(t),
+                    xlim=[10**2, 10**3.65],
+                    ylim=[10**1, 10**3])
+                ph.fractal_plot(
+                    params.prefix, 'd2_t{}'.format(t), epsilon,
+                    p,
+                    helpers.fit_func,
+                    d2_params,
+                    xlabel=r'$\log \epsilon$', ylabel=r'$\log S2$',
+                    xlim=[10**2, 10**3.65],
+                    ylim=[10**2, 10**4])
+            if self.args.save_results:
+                out_fd.write("%d, %.3f, %.3f, %.3f, %.3f, %d\n" % (
+                    t,
+                    d0_params[0],
+                    -d0_params[1],
+                    d2_params[0],
+                    d2_params[1],
+                    len(idxs)))
+
+            logging.debug("city %s, time snapshot %d, D0 %.3f D2 %.3f #rides %d" % (
+                self.params.prefix,
                 t,
-                d0_params[0],
                 -d0_params[1],
-                d2_params[0],
                 d2_params[1],
                 len(idxs)))
+            time_idx.append(t)
+            d0.append(d0_params[1])
+            d2.append(d2_params[1])
+        d0 = -np.array(d0)
+        d2 = np.array(d2)
 
-        logging.debug("city %s, time snapshot %d, D0 %.3f D2 %.3f #rides %d" % (
-            params.prefix,
-            t,
-            -d0_params[1],
-            d2_params[1],
-            len(idxs)))
-        time_idx.append(t)
-        d0.append(d0_params[1])
-        d2.append(d2_params[1])
-    d0 = -np.array(d0)
-    d2 = np.array(d2)
+        l = """city %s, D0 mean %.3f,
+               D2 mean %.3f D0 max %.3f,
+               D2 max %.3f """ % (
+            self.params.prefix,
+            np.mean(d0),
+            np.mean(d2),
+            np.max(d0),
+            np.max(d2))
 
-    l = """city %s, D0 mean %.3f,
-           D2 mean %.3f D0 max %.3f,
-           D2 max %.3f """ % (
-        params.prefix,
-        np.mean(d0),
-        np.mean(d2),
-        np.max(d0),
-        np.max(d2))
-
-    logging.info(l)
-    summary_fd = open(os.path.join(
-        const.stats_dir, 'ss_{}_{}s_{}m_{}m_summary'.format(
-            params.prefix,
-            args.time_bin_width,
-            min_len,
-            max_len
-        )), 'w')
-    summary_fd.write(l)
-    summary_fd.close()
+        logging.info(l)
+        summary_fd = open(os.path.join(
+            const.stats_dir, 'ss_{}_{}s_{}m_{}m_summary'.format(
+                self.params.prefix,
+                self.args.time_bin_width,
+                min_len,
+                max_len
+            )), 'w')
+        summary_fd.write(l)
+        summary_fd.close()

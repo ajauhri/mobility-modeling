@@ -7,7 +7,7 @@ import pandas as pd
 
 import utils.const as const
 import utils.helpers as helpers
-import modelling.fractals as fractals
+from modelling.fractals import Spatial
 from modelling.temporal import Temporal
 
 const.stats_dir = './stats'
@@ -25,8 +25,7 @@ def compute_stats(args, params):
         args.time_bin_width)
     reqs_over_time = helpers.bucket_by_time(time_bin_bounds, reqs_ts)
     if args.fractal_analysis:
-        fractals.compute_stats(P, D, reqs_ts, reqs_over_time,
-                               args, params)
+        a = Spatial(P, D, reqs_ts, reqs_over_time, args, params)
     else:
         a = Temporal(P, D, reqs_ts, reqs_over_time, args, params)
     a.compute_stats()
