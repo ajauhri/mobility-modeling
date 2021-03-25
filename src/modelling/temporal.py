@@ -28,6 +28,7 @@ class Temporal:
             self.n_edges[key].append(self.rrg_t[key].n_edges)
             self.avg_out_degree[key].append(self.rrg_t[key].avg_out_degree)
             self.avg_in_degree[key].append(self.rrg_t[key].avg_in_degree)
+            self.time_snapshots[key].append(t)
 
     def _compute_dpl(self, key):
         p, infodict = helpers.compute_least_sq(
@@ -86,7 +87,7 @@ class Temporal:
                 np.mean(self.node_degree_exp[key]),
                 tot_nodes))
 
-    def _generate_plots(self, key, dpl_params, node_len, t):
+    def _generate_plots(self, key, dpl_params, node_len, t, theor_deg_exp):
         if self.args.save_results:
             fname = "{}_{}_n{}_t{}".format(key, t, node_len,
                                            self.args.time_bin_width)
@@ -99,29 +100,35 @@ class Temporal:
                 self.params.prefix,
                 fname,
                 self.n_nodes[key],
-                self.node_degree_exp[key]
+                self.node_degree_exp[key],
+                theor_deg_exp,
             )
-            if key == "every_ts":
-                rrg_degree = self.rrg_t[key].in_degree + self.rrg_t[key].out_degree
-            else:
-                rrg_degree = self.node_degree
+            rrg_degree = self.rrg_t[key].in_degree + self.rrg_t[key].out_degree
 
             ph.node_degree_plot(
                 self.params.prefix,
                 fname,
                 rrg_degree,
             )
-            a = np.array(self.avg_out_degree[key])
-            b = np.array(self.avg_in_degree[key])
+            avg_out = np.array(self.avg_out_degree[key])
+            avg_in = np.array(self.avg_in_degree[key])
+            ph.degree_ratio_plot(
+                self.params.prefix,
+                fname,
+                avg_out/avg_in,
+                self.time_snapshots[key],
+            )
             ph.avg_degree_plot(
                 self.params.prefix, fname,
-                a/b,
+                self.avg_out_degree[key],
                 "out",
+                self.time_snapshots[key],
             )
             ph.avg_degree_plot(
                 self.params.prefix, fname,
                 self.avg_in_degree[key],
                 "in",
+                self.time_snapshots[key],
             )
 
 
@@ -141,10 +148,10 @@ class Temporal:
         self.n_edges = {'each_ts': [], 'every_n_ts': []}
         self.avg_out_degree = {'each_ts': [], 'every_n_ts': []}
         self.avg_in_degree = {'each_ts': [], 'every_n_ts': []}
+        self.time_snapshots = {'each_ts': [], 'every_n_ts': []}
         self.rrg_t = {'each_ts': RRGSnapshot(), 'every_n_ts': RRGSnapshot()}
         self.node_degree_exp = {'each_ts': [], 'every_n_ts': []}
         self.out_fd = {'each_ts': None, 'every_n_ts': None}
-        self.node_degree = Counter()
 
         if args.save_results:
             logging.info("Saving results")
@@ -211,7 +218,7 @@ class Temporal:
                         node_len, tot_nodes, t)
 
                     self._generate_plots('every_n_ts',
-                        dpl_params, node_len, t)
+                        dpl_params, node_len, t, theor_deg_exp)
 
                     #d1, d2 = helpers.compute_diameter_effective(
                     #    self.rrg_t['every_n_ts'].out_weights)
@@ -221,14 +228,13 @@ class Temporal:
                     self.node_degree_exp['every_n_ts'] = []
                     self.avg_out_degree['every_n_ts'] = []
                     self.avg_in_degree['every_n_ts'] = []
+                    self.time_snapshots['every_n_ts'] = []
                     self.rrg_t['every_n_ts'] = RRGSnapshot()
 
                 # Generate a new graph for each time snapshot (ts)
                 self.rrg_t['each_ts'] = RRGSnapshot()
                 self._update_rrg_and_attrs('each_ts', self.P[idxs, :],
                     self.D[idxs, :], lat_grids, lng_grids, t)
-
-                self.node_degree += self.rrg_t["each_ts"].out_degree + self.rrg_t["each_ts"].in_degree
 
                 # Not to generate a new graph for every n time snapshots analysis
                 self._update_rrg_and_attrs('every_n_ts', self.P[idxs, :],
@@ -245,7 +251,7 @@ class Temporal:
 
             self._save_stats('each_ts', dpl_params, r2, theor_deg_exp,
                 node_len, tot_nodes, t)
-            self._generate_plots('each_ts', dpl_params, node_len, t)
+            self._generate_plots('each_ts', dpl_params, node_len, t, theor_deg_exp)
 
         if self.args.save_results:
             self.out_fd['each_ts'].close()

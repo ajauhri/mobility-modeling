@@ -209,7 +209,7 @@ def is_night_hour(epoch, time_zone):
     dt = pytz.utc.localize(dt)
     to_zone = tz.gettz(time_zone)
     hour = dt.astimezone(to_zone).hour
-    if hour >= 0 and hour <= 6:
+    if hour >= 0 and hour <= 7:
         return True
     else:
         return False

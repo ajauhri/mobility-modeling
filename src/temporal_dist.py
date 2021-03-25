@@ -57,8 +57,8 @@ class Temporal:
             plt.ylim([0, 8000])
             plt.ylabel("volume of ride requests", fontsize=18)
             plot_path = os.path.join(const.plot_dir,
-                "volume_time_series_{}.pdf".format(self.params.prefix))
-            plt.savefig(plot_path, format='pdf', dpi=800, bbox_inches='tight')
+                "volume_time_series_{}.png".format(self.params.prefix))
+            plt.savefig(plot_path, format='png', dpi=800, bbox_inches='tight')
             logging.info("Plot saved at {}".format(plot_path))
             plt.clf()
 
