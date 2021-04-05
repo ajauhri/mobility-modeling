@@ -88,7 +88,7 @@ class Temporal:
                 tot_nodes))
 
     def _generate_plots(self, key, dpl_params, node_len, t, theor_deg_exp):
-        if self.args.save_results:
+        if self.args.save_results and key == "each_ts":
             fname = "{}_{}_n{}_t{}".format(key, t, node_len,
                                            self.args.time_bin_width)
             ph.dpl_plot(self.params.prefix,
@@ -130,6 +130,22 @@ class Temporal:
                 "in",
                 self.time_snapshots[key],
             )
+            """
+            time varying plots only needed when average exceeds > 2
+            """
+            if np.mean(self.node_degree_exp['each_ts']) > 2:
+                time_varying_theor_deg_exp = helpers.time_varying_theor_degree_exp(
+                    dpl_params[1],
+                    self.n_nodes["each_ts"]
+                )
+                ph.time_varying_node_degree_exp_plot(
+                    self.params.prefix,
+                    fname + "_time_varying",
+                    self.n_nodes['each_ts'],#self.time_snapshots["each_ts"],
+                    time_varying_theor_deg_exp,
+                    self.node_degree_exp["each_ts"],
+                )
+
 
 
     def __init__(self, P, D, reqs_ts, reqs_over_time, args, params):
@@ -223,14 +239,8 @@ class Temporal:
                     #d1, d2 = helpers.compute_diameter_effective(
                     #    self.rrg_t['every_n_ts'].out_weights)
 
-                    self.n_nodes['every_n_ts'] = []
-                    self.n_edges['every_n_ts'] = []
-                    self.node_degree_exp['every_n_ts'] = []
-                    self.avg_out_degree['every_n_ts'] = []
-                    self.avg_in_degree['every_n_ts'] = []
-                    self.time_snapshots['every_n_ts'] = []
+                    self.reset('every_n_ts')
                     self.rrg_t['every_n_ts'] = RRGSnapshot()
-
                 # Generate a new graph for each time snapshot (ts)
                 self.rrg_t['each_ts'] = RRGSnapshot()
                 self._update_rrg_and_attrs('each_ts', self.P[idxs, :],
@@ -239,20 +249,30 @@ class Temporal:
                 # Not to generate a new graph for every n time snapshots analysis
                 self._update_rrg_and_attrs('every_n_ts', self.P[idxs, :],
                     self.D[idxs, :], lat_grids, lng_grids, t)
-
                 self._print_debug_stats(node_len, t, len(idxs))
 
                 n_rides.append(len(idxs))
 
             r2, dpl_params = self._compute_dpl('each_ts')
             theor_deg_exp = helpers.theor_degree_exp(dpl_params[1])
+
             self._print_info_stats('each_ts', dpl_params, r2, theor_deg_exp,
                 node_len, tot_nodes, t)
 
             self._save_stats('each_ts', dpl_params, r2, theor_deg_exp,
                 node_len, tot_nodes, t)
             self._generate_plots('each_ts', dpl_params, node_len, t, theor_deg_exp)
+            self.reset('each_ts')
 
         if self.args.save_results:
             self.out_fd['each_ts'].close()
             self.out_fd['every_n_ts'].close()
+
+    def reset(self, key):
+        self.n_nodes[key] = []
+        self.n_edges[key] = []
+        self.node_degree_exp[key] = []
+        self.avg_out_degree[key] = []
+        self.avg_in_degree[key] = []
+        self.time_snapshots[key] = []
+

@@ -216,13 +216,13 @@ def is_night_hour(epoch, time_zone):
 
 
 def theor_degree_exp(alpha):
-    """
-    nodes = np.array(nodes)
-    n = 4*nodes**(alpha - 1) + 1
-    d = 2*nodes**(alpha - 1)
-    return n/d
-    """
     return 2/alpha
+
+def time_varying_theor_degree_exp(alpha, nodes):
+    nodes = np.array(nodes)
+    n = 4*nodes**(alpha - 1) - 1
+    d = 2*nodes**(alpha - 1) - 1
+    return n/d
 
 
 def real_degree_exp(rrg_t):

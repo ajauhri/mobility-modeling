@@ -60,6 +60,17 @@ def node_degree_exp_plot(city, fname, n_nodes, exp, theor_exp):
     plt.clf()
 
 
+def time_varying_node_degree_exp_plot(city, fname, time_snapshots, theor_exp, exp):
+    plt.xlabel('Time Snapshots', fontsize=25)
+    plt.tick_params(axis='both', labelsize=15)
+    plt.subplots_adjust(top=0.88)
+    plt.scatter(time_snapshots, theor_exp, marker='x', s=10, c='k')
+    plt.scatter(time_snapshots, exp, marker='x', s=10, c='r')
+    dirname = os.path.join(const.plot_dir, city, "degree_exp")
+    _save_fig(dirname, fname)
+    plt.clf()
+
+
 def node_degree_plot(city, fname, degree):
     vals = [[k, v] for k, v in degree.items()]
     vals = np.array(vals)
@@ -104,7 +115,7 @@ def avg_degree_plot(city, fname, avg_degree, degree_type, time_snapshots):
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
     labels = ["Friday", "Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"]
     for i in range(1, len(x)):
-    	if x[i] - x[i-1] != 1:
+    	if x[i] - x[i-1] >= 36:
             xcoords.append((x[i]+x[i-1])/2)
     if len(xcoords) > 0:
         for xc, c, l in zip(xcoords, colors, labels):
@@ -131,7 +142,7 @@ def fractal_plot(city, fname, epsilon, d, fit_func, params, **args):
     #plt.ylim(args['ylim'])
     plt.plot(epsilon, d, 'k.', markersize=6)
     plt.plot(epsilon, fit_func(epsilon, params), color='r', linewidth=2)
-    plt.title("C=%.3f, alpha=%.3f" % (params[0], params[1]), fontsize=25)
+    plt.title("Slope=%.3f" % (params[1]), fontsize=25)
     dirname = os.path.join(const.plot_dir, city, "fd")
     _save_fig(dirname, fname)
     plt.clf()

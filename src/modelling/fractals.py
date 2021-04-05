@@ -13,6 +13,8 @@ fractal_limits = {
     "san_francisco": [450, 2500],
     "los_angeles": [1500, 4000],
     "chicago": [600, 3000],
+    "new_york_yellow": [450, 2500],
+    "mexico_city": [600, 2500],
 }
 
 
@@ -75,8 +77,10 @@ class Spatial:
                 continue
 
             epsilon = []
-            p = []
-            box_count = []
+            p_dest = []
+            box_count_dest = []
+            p_src = []
+            box_count_src = []
             """
             Step value for node_len will alter the results for instance a step size
             of 100 meters will give a different exponent for D2 in comparison to
@@ -94,59 +98,89 @@ class Spatial:
                 rrg_t.init(self.P[idxs, :], self.D[idxs, :], lat_grids, lng_grids)
                 epsilon.append(node_len)
                 #box_count.append(len(rrg_t.dest_nodes))
-                box_count.append(
+                prob = np.array(list(rrg_t.dest_nodes.values()))/len(idxs)
+                #print("aj ", prob, sum(prob), sum(prob**0), len(rrg_t.dest_nodes))
+                box_count_dest.append(
                     np.sum(
                         (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**0
                     )
                 )
-                p.append(
+                box_count_src.append(
+                    np.sum(
+                        (np.array(list(rrg_t.source_nodes.values()))/len(idxs))**0
+                    )
+                )
+                p_dest.append(
                     np.sum(
                         (np.array(list(rrg_t.dest_nodes.values()))/len(idxs))**2
                     )
                 )
+                p_src.append(
+                    np.sum(
+                        (np.array(list(rrg_t.source_nodes.values()))/len(idxs))**2
+                    )
+                )
 
             epsilon = np.array(epsilon)
-            box_count = np.array(box_count)
-            p = np.array(p)
+            box_count_dest = np.array(box_count_dest)
+            p_dest = np.array(p_dest)
+            box_count_src = np.array(box_count_src)
+            p_src = np.array(p_src)
 
-            d0_params, _ = helpers.compute_least_sq(epsilon, box_count)
-            d2_params, _ = helpers.compute_least_sq(epsilon, p)
+            d0_params, _ = helpers.compute_least_sq(epsilon, box_count_dest)
+            d2_params_dest, _ = helpers.compute_least_sq(epsilon, p_dest)
+            d2_params_src, _ = helpers.compute_least_sq(epsilon, p_src)
+            #print('aj 1 ', np.polyfit(np.log(box_count), np.log(epsilon), 1))
+            #print('aj 1 ', np.linalg.lstsq(np.log(box_count), np.log(epsilon)))
+            #print('aj 2 ', np.polyfit(np.log(p), np.log(epsilon), 1))
+            #print("aj ", d3_params[1]/2)
             if self.args.save_results:
+                """
                 ph.fractal_plot(
-                    params.prefix, 'd0_t{}'.format(t), epsilon,
-                    box_count,
+                    self.params.prefix, 'd0_t{}'.format(t), epsilon,
+                    box_count_dest,
                     helpers.fit_func,
                     d0_params,
-                    xlabel=r'$\log \epsilon$', ylabel=r'$\log N(\epsilon)$',
+                    xlabel=r'$\log \epsilon$', ylabel=r'$\log \sum_i p_i^2$',
                     prefix='d0_' + str(t),
                     xlim=[10**2, 10**3.65],
                     ylim=[10**1, 10**3])
+                """
                 ph.fractal_plot(
-                    params.prefix, 'd2_t{}'.format(t), epsilon,
-                    p,
+                    self.params.prefix, 'dest_d2_t{}'.format(t), epsilon,
+                    p_dest,
                     helpers.fit_func,
-                    d2_params,
-                    xlabel=r'$\log \epsilon$', ylabel=r'$\log S2$',
+                    d2_params_dest,
+                    xlabel=r'$\log \epsilon$', ylabel=r'$\log \sum_i p_i^2$',
                     xlim=[10**2, 10**3.65],
                     ylim=[10**2, 10**4])
-            if self.args.save_results:
+                """
+                ph.fractal_plot(
+                    self.params.prefix, 'src_d2_t{}'.format(t), epsilon,
+                    p_src,
+                    helpers.fit_func,
+                    d2_params_src,
+                    xlabel=r'$\log \epsilon$', ylabel=r'$\log \sum_i p_i^2$',
+                    xlim=[10**2, 10**3.65],
+                    ylim=[10**2, 10**4])
+                """
                 out_fd.write("%d, %.3f, %.3f, %.3f, %.3f, %d\n" % (
                     t,
                     d0_params[0],
                     -d0_params[1],
-                    d2_params[0],
-                    d2_params[1],
+                    d2_params_dest[0],
+                    d2_params_dest[1],
                     len(idxs)))
 
             logging.debug("city %s, time snapshot %d, D0 %.3f D2 %.3f #rides %d" % (
                 self.params.prefix,
                 t,
                 -d0_params[1],
-                d2_params[1],
+                d2_params_dest[1],
                 len(idxs)))
             time_idx.append(t)
             d0.append(d0_params[1])
-            d2.append(d2_params[1])
+            d2.append(d2_params_dest[1])
         d0 = -np.array(d0)
         d2 = np.array(d2)
 
