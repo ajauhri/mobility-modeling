@@ -79,30 +79,27 @@ class Temporal:
                     tot_nodes, t):
 
         if self.args.save_results:
+            real_avg_exp = np.mean(self.node_degree_exp[key])
             self.out_fd[key].write("{}, {:.3f}, {:.3f}, {:.3f}, {}, {}, {:.3f}, {:.3f}, {}\n".format(
                 node_len, dpl_params[0], dpl_params[1], r2,
                 np.mean(self.n_nodes['each_ts']),
                 np.mean(self.n_edges['each_ts']),
                 theor_deg_exp,
-                np.mean(self.node_degree_exp[key]),
+                real_avg_exp,
                 tot_nodes))
 
-    def _generate_plots(self, key, dpl_params, node_len, t, theor_deg_exp):
+    def _generate_plots(self, key, dpl_params, node_len, t, theor_deg_exp, time_varying_exp_plot=False):
         if self.args.save_results and key == "each_ts":
             fname = "{}_{}_n{}_t{}".format(key, t, node_len,
                                            self.args.time_bin_width)
             ph.dpl_plot(self.params.prefix,
-                        fname, self.n_nodes[key],
-                        self.n_edges[key],
-                        helpers.fit_func,
-                        dpl_params)
-            ph.node_degree_exp_plot(
-                self.params.prefix,
-                fname,
-                self.n_nodes[key],
-                self.node_degree_exp[key],
-                theor_deg_exp,
+                fname, self.n_nodes[key],
+                self.n_edges[key],
+                helpers.fit_func,
+                dpl_params
             )
+
+
             rrg_degree = self.rrg_t[key].in_degree + self.rrg_t[key].out_degree
 
             ph.node_degree_plot(
@@ -130,20 +127,22 @@ class Temporal:
                 "in",
                 self.time_snapshots[key],
             )
-            """
-            time varying plots only needed when average exceeds > 2
-            """
-            if np.mean(self.node_degree_exp['each_ts']) > 2:
-                time_varying_theor_deg_exp = helpers.time_varying_theor_degree_exp(
-                    dpl_params[1],
-                    self.n_nodes["each_ts"]
-                )
+
+            if time_varying_exp_plot:
                 ph.time_varying_node_degree_exp_plot(
                     self.params.prefix,
                     fname + "_time_varying",
-                    self.n_nodes['each_ts'],#self.time_snapshots["each_ts"],
-                    time_varying_theor_deg_exp,
+                    self.n_nodes['each_ts'],
+                    theor_deg_exp,
                     self.node_degree_exp["each_ts"],
+                )
+            else:
+                ph.node_degree_exp_plot(
+                    self.params.prefix,
+                    fname,
+                    self.n_nodes['each_ts'],
+                    self.node_degree_exp[key],
+                    theor_deg_exp,
                 )
 
 
@@ -254,14 +253,25 @@ class Temporal:
                 n_rides.append(len(idxs))
 
             r2, dpl_params = self._compute_dpl('each_ts')
-            theor_deg_exp = helpers.theor_degree_exp(dpl_params[1])
+            real_avg_exp = np.mean(self.node_degree_exp['each_ts'])
+            if real_avg_exp > 2:
+                theor_deg_exp = helpers.time_varying_theor_degree_exp(
+                    dpl_params[1],
+                    self.n_nodes['each_ts']
+                )
+            else:
+                theor_deg_exp = helpers.theor_degree_exp(dpl_params[1])
 
-            self._print_info_stats('each_ts', dpl_params, r2, theor_deg_exp,
+            self._print_info_stats('each_ts', dpl_params, r2, np.mean(theor_deg_exp),
                 node_len, tot_nodes, t)
 
-            self._save_stats('each_ts', dpl_params, r2, theor_deg_exp,
+            self._save_stats('each_ts', dpl_params, r2, np.mean(theor_deg_exp),
                 node_len, tot_nodes, t)
-            self._generate_plots('each_ts', dpl_params, node_len, t, theor_deg_exp)
+            if real_avg_exp > 2:
+                self._generate_plots('each_ts', dpl_params, node_len, t, theor_deg_exp, True)
+            else:
+                self._generate_plots('each_ts', dpl_params, node_len, t, theor_deg_exp)
+
             self.reset('each_ts')
 
         if self.args.save_results:

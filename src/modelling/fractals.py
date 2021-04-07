@@ -15,6 +15,15 @@ fractal_limits = {
     "chicago": [600, 3000],
     "new_york_yellow": [450, 2500],
     "mexico_city": [600, 2500],
+    "rio_de_janeiro": [600, 2500],
+    "london": [600, 2500],
+    "toronto": [500, 2500],
+    "boston": [600, 2500],
+    "paris": [900, 4000],
+    "sao_paulo": [900, 4000],
+    "miami": [600, 2500],
+    "new_jersey": [900, 2500],
+    "new_delhi": [900, 3000],
 }
 
 
@@ -145,7 +154,6 @@ class Spatial:
                     prefix='d0_' + str(t),
                     xlim=[10**2, 10**3.65],
                     ylim=[10**1, 10**3])
-                """
                 ph.fractal_plot(
                     self.params.prefix, 'dest_d2_t{}'.format(t), epsilon,
                     p_dest,
@@ -154,7 +162,6 @@ class Spatial:
                     xlabel=r'$\log \epsilon$', ylabel=r'$\log \sum_i p_i^2$',
                     xlim=[10**2, 10**3.65],
                     ylim=[10**2, 10**4])
-                """
                 ph.fractal_plot(
                     self.params.prefix, 'src_d2_t{}'.format(t), epsilon,
                     p_src,
@@ -184,13 +191,15 @@ class Spatial:
         d0 = -np.array(d0)
         d2 = np.array(d2)
 
-        l = """city %s, D0 mean %.3f,
-               D2 mean %.3f D0 max %.3f,
-               D2 max %.3f """ % (
+        l = """city %s,
+               D0 mean %.3f, min %.3f, max %.3f
+               D2 mean %.3f, min %.3f, max %.3f """ % (
             self.params.prefix,
             np.mean(d0),
-            np.mean(d2),
+            np.mean(d0),
             np.max(d0),
+            np.mean(d2),
+            np.min(d2),
             np.max(d2))
 
         logging.info(l)

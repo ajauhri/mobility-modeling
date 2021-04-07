@@ -61,12 +61,14 @@ def node_degree_exp_plot(city, fname, n_nodes, exp, theor_exp):
 
 
 def time_varying_node_degree_exp_plot(city, fname, time_snapshots, theor_exp, exp):
-    plt.xlabel('Time Snapshots', fontsize=25)
+    plt.xlabel('Number of Nodes', fontsize=25)
+    plt.ylabel('Degree Exponent', fontsize=25)
     plt.tick_params(axis='both', labelsize=15)
     plt.subplots_adjust(top=0.88)
-    plt.scatter(time_snapshots, theor_exp, marker='x', s=10, c='k')
-    plt.scatter(time_snapshots, exp, marker='x', s=10, c='r')
+    plt.scatter(time_snapshots, theor_exp, s=10, c='k', label="Data")
+    plt.scatter(time_snapshots, exp, s=10, c='r', label="Theoretical")
     dirname = os.path.join(const.plot_dir, city, "degree_exp")
+    plt.legend()
     _save_fig(dirname, fname)
     plt.clf()
 
